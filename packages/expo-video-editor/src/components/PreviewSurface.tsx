@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
+import { getFilterMatrix, isIdentityFilter } from '../filters/presets';
 import EditorVideoView from '../native/EditorVideoView';
 import { useEditorStore } from '../state/store';
 
@@ -9,10 +10,13 @@ export function PreviewSurface() {
   const paused = useEditorStore((s) => s.paused);
   const trimStart = useEditorStore((s) => s.trim.start);
   const trimEnd = useEditorStore((s) => s.trim.end);
+  const filter = useEditorStore((s) => s.filter);
   const seekNonce = useEditorStore((s) => s.seekNonce);
   const seekTarget = useEditorStore((s) => s.seekTarget);
   const setMeta = useEditorStore((s) => s.setMeta);
   const setPlayhead = useEditorStore((s) => s.setPlayhead);
+
+  const colorMatrix = isIdentityFilter(filter) ? [] : getFilterMatrix(filter);
 
   if (!source.uri) return <View style={styles.container} />;
 
@@ -25,6 +29,7 @@ export function PreviewSurface() {
         loopStartMs={Math.round(trimStart * 1000)}
         loopEndMs={Math.round(trimEnd * 1000)}
         seek={{ seq: seekNonce, positionMs: Math.round(seekTarget * 1000) }}
+        colorMatrix={colorMatrix}
         onLoad={(e) => {
           const { durationMs, width, height, rotationDeg } = e.nativeEvent;
           setMeta({ duration: durationMs / 1000, width, height, rotation: rotationDeg });

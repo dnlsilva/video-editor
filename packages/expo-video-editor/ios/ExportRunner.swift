@@ -21,7 +21,10 @@ class ExportRunner {
       return
     }
     let asset = AVURLAsset(url: url)
-    guard let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetPassthrough) else {
+    // A filter needs a re-encoding preset + video composition; trim-only stays passthrough.
+    let hasFilter = payload.colorMatrix.count >= 20
+    let preset = hasFilter ? AVAssetExportPresetHighestQuality : AVAssetExportPresetPassthrough
+    guard let session = AVAssetExportSession(asset: asset, presetName: preset) else {
       reject("EXPORT_FAILED", "Could not create export session")
       return
     }
@@ -36,6 +39,9 @@ class ExportRunner {
       let start = CMTime(value: CMTimeValue(payload.startMs), timescale: 1000)
       let duration = CMTime(value: CMTimeValue(payload.endMs - payload.startMs), timescale: 1000)
       session.timeRange = CMTimeRange(start: start, duration: duration)
+    }
+    if hasFilter {
+      session.videoComposition = ColorMatrixFilter.videoComposition(for: asset, matrix: payload.colorMatrix)
     }
     self.session = session
 

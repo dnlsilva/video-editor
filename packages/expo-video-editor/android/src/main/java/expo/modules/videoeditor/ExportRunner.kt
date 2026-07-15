@@ -5,10 +5,12 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import androidx.media3.common.Effect
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.EditedMediaItem
+import androidx.media3.transformer.Effects
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.ProgressHolder
@@ -62,7 +64,15 @@ class ExportRunner(
           .setClippingConfiguration(clipping)
           .build()
 
-        val edited = EditedMediaItem.Builder(mediaItem).build()
+        // Non-empty color matrix → GPU effect (forces re-encode); empty → passthrough transmux.
+        val videoEffects: List<Effect> = if (payload.colorMatrix.size >= 20) {
+          listOf(ColorMatrixEffect(FloatArray(20) { payload.colorMatrix[it].toFloat() }))
+        } else {
+          emptyList()
+        }
+        val edited = EditedMediaItem.Builder(mediaItem)
+          .setEffects(Effects(emptyList(), videoEffects))
+          .build()
 
         val t = Transformer.Builder(context)
           .addListener(object : Transformer.Listener {

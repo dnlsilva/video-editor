@@ -17,6 +17,7 @@ class ExpoVideoEditorView: ExpoView {
   private var loopEndMs: Int = 0
   private var lastSeekSeq: Int = -1
   private var didEmitLoad = false
+  private var colorMatrix: [Double] = []
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -53,8 +54,10 @@ class ExpoVideoEditorView: ExpoView {
       guard let self = self, observed.status == .readyToPlay, !self.didEmitLoad else { return }
       self.didEmitLoad = true
       self.emitLoad(item)
+      self.applyVideoComposition() // reapply once tracks are loaded
     }
     player.replaceCurrentItem(with: item)
+    applyVideoComposition()
     player.play()
   }
 
@@ -75,6 +78,20 @@ class ExpoVideoEditorView: ExpoView {
     lastSeekSeq = seq
     let target = CMTime(value: CMTimeValue(max(0, positionMs)), timescale: 1000)
     player.seek(to: target, toleranceBefore: .zero, toleranceAfter: .zero)
+  }
+
+  func setColorMatrix(_ matrix: [Double]) {
+    colorMatrix = matrix
+    applyVideoComposition()
+  }
+
+  private func applyVideoComposition() {
+    guard let item = player.currentItem else { return }
+    if colorMatrix.count >= 20 {
+      item.videoComposition = ColorMatrixFilter.videoComposition(for: item.asset, matrix: colorMatrix)
+    } else {
+      item.videoComposition = nil
+    }
   }
 
   private func onTick(_ time: CMTime) {

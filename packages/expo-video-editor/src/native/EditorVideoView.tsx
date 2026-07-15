@@ -22,6 +22,8 @@ export type EditorVideoNativeProps = {
   loopEndMs: number;
   /** seek request: bumping `seq` re-triggers a jump to `positionMs` even if unchanged */
   seek: { seq: number; positionMs: number };
+  /** 4×5 color matrix (20 numbers) applied live on the GPU; empty = no filter */
+  colorMatrix: number[];
   onLoad?: (event: { nativeEvent: NativeLoadEvent }) => void;
   onProgress?: (event: { nativeEvent: NativeProgressEvent }) => void;
   onEnded?: (event: { nativeEvent: Record<string, never> }) => void;

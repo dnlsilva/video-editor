@@ -13,7 +13,9 @@ struct ExportPayload: Record {
   @Field var sourceUri: String = ""
   @Field var startMs: Int = 0
   @Field var endMs: Int = 0
-  // 0 = keep source height; otherwise cap (720/1080). Applied once we re-encode (Phase 2).
+  // 0 = keep source height; otherwise cap (720/1080). Applied when we re-encode.
   @Field var resolution: Int = 0
   @Field var bitrate: Int = 0
+  // 4×5 color matrix (20 numbers); empty = no filter → passthrough
+  @Field var colorMatrix: [Double] = []
 }

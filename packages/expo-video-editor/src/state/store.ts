@@ -29,6 +29,7 @@ export type EditorStore = {
   init: (source: VideoSource) => void;
   setMeta: (meta: VideoMeta) => void;
   setTrim: (start: number, end: number) => void;
+  setFilter: (key: string) => void;
   setPlayhead: (t: number) => void;
   requestSeek: (t: number) => void;
   setPaused: (paused: boolean) => void;
@@ -81,6 +82,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     })),
 
   setTrim: (start, end) => set({ trim: { start, end } }),
+  setFilter: (key) => set({ filter: key }),
   setPlayhead: (t) => set({ playhead: t }),
   requestSeek: (t) =>
     set((s) => ({ seekTarget: t, seekNonce: s.seekNonce + 1, playhead: t })),

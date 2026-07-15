@@ -54,6 +54,9 @@ class ExpoVideoEditorModule : Module() {
       Prop("seek") { view: ExpoVideoEditorView, seek: SeekRecord ->
         view.seekTo(seek.positionMs.toLong(), seek.seq)
       }
+      Prop("colorMatrix") { view: ExpoVideoEditorView, matrix: List<Double> ->
+        view.setColorMatrix(matrix)
+      }
     }
   }
 }

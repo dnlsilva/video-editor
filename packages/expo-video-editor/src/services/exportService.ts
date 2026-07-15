@@ -1,4 +1,5 @@
 import { toEditorError } from '../errors';
+import { getFilterMatrix, isIdentityFilter } from '../filters/presets';
 import Native, { type NativeExportPayload } from '../native/VideoEditorModule';
 import type { EditorState, ExportOptions, ExportResult } from '../types';
 
@@ -24,6 +25,8 @@ export async function exportVideo(
     endMs: Math.round(state.trim.end * 1000),
     resolution: resolutionToHeight(options.resolution),
     bitrate: options.bitrate ?? 0,
+    // empty for the identity filter so trim-only stays a passthrough (no re-encode)
+    colorMatrix: isIdentityFilter(state.filter) ? [] : getFilterMatrix(state.filter),
   };
 
   const sub = onProgress

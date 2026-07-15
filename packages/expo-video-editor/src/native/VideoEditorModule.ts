@@ -9,6 +9,8 @@ export type NativeExportPayload = {
   resolution: number;
   /** 0 = auto (derive from resolution) */
   bitrate: number;
+  /** 4×5 color matrix (20 numbers); empty = no filter → passthrough */
+  colorMatrix: number[];
 };
 
 export type NativeExportResult = {

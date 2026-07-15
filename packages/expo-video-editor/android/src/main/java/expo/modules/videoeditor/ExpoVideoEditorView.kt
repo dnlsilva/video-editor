@@ -92,6 +92,14 @@ class ExpoVideoEditorView(context: Context, appContext: AppContext) : ExpoView(c
     exo.seekTo(positionMs.coerceAtLeast(0))
   }
 
+  fun setColorMatrix(matrix: List<Double>) {
+    if (matrix.size >= 20) {
+      exo.setVideoEffects(listOf(ColorMatrixEffect(FloatArray(20) { matrix[it].toFloat() })))
+    } else {
+      exo.setVideoEffects(emptyList())
+    }
+  }
+
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
     handler.removeCallbacks(ticker)

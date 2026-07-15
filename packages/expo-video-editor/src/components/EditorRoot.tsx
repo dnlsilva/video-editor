@@ -1,10 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useExport, type ExportCallbacks } from '../hooks/useExport';
-import { useEditorStore } from '../state/store';
-import { useTheme } from '../theme';
+import { type ActivePanel, useEditorStore } from '../state/store';
+import { type EditorTheme, useTheme } from '../theme';
 import type { ExportOptions } from '../types';
 import { ExportOverlay } from './ExportOverlay';
+import { FilterCarousel } from './filters/FilterCarousel';
 import { PreviewSurface } from './PreviewSurface';
 import { TrimTimeline } from './timeline/TrimTimeline';
 
@@ -19,7 +20,11 @@ export function EditorRoot({ exportOptions, callbacks, onCancel }: Props) {
   const paused = useEditorStore((s) => s.paused);
   const togglePlay = useEditorStore((s) => s.togglePlay);
   const hasMeta = useEditorStore((s) => s.meta != null);
+  const activePanel = useEditorStore((s) => s.activePanel);
+  const setActivePanel = useEditorStore((s) => s.setActivePanel);
   const { run, cancel } = useExport(exportOptions, callbacks);
+
+  const toggle = (panel: ActivePanel) => setActivePanel(activePanel === panel ? 'none' : panel);
 
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
@@ -31,10 +36,15 @@ export function EditorRoot({ exportOptions, callbacks, onCancel }: Props) {
       </View>
 
       <View style={styles.bottom}>
+        {activePanel === 'filter' ? <FilterCarousel /> : null}
         {hasMeta ? <TrimTimeline /> : null}
-        <Pressable style={[styles.exportBtn, { backgroundColor: theme.accent }]} onPress={() => run()}>
-          <Text style={styles.exportText}>Export</Text>
-        </Pressable>
+
+        <View style={styles.toolbar}>
+          <ToolButton label="Filters" active={activePanel === 'filter'} onPress={() => toggle('filter')} theme={theme} />
+          <Pressable style={[styles.exportBtn, { backgroundColor: theme.accent }]} onPress={() => run()}>
+            <Text style={styles.exportText}>Export</Text>
+          </Pressable>
+        </View>
       </View>
 
       <ExportOverlay
@@ -44,6 +54,27 @@ export function EditorRoot({ exportOptions, callbacks, onCancel }: Props) {
         }}
       />
     </View>
+  );
+}
+
+function ToolButton({
+  label,
+  active,
+  onPress,
+  theme,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+  theme: EditorTheme;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[styles.toolBtn, { backgroundColor: active ? theme.accent : theme.surface }]}
+    >
+      <Text style={[styles.toolText, { color: active ? '#fff' : theme.textMuted }]}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -60,7 +91,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   playIcon: { color: 'rgba(255,255,255,0.9)', fontSize: 56 },
-  bottom: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 28, gap: 16 },
-  exportBtn: { alignSelf: 'center', paddingHorizontal: 40, paddingVertical: 12, borderRadius: 24 },
+  bottom: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 28, gap: 14 },
+  toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  toolBtn: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20 },
+  toolText: { fontSize: 14, fontWeight: '600' },
+  exportBtn: { paddingHorizontal: 32, paddingVertical: 12, borderRadius: 24 },
   exportText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

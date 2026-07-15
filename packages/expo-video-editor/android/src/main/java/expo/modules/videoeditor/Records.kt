@@ -16,7 +16,9 @@ class ExportPayload : Record {
   @Field val sourceUri: String = ""
   @Field val startMs: Int = 0
   @Field val endMs: Int = 0
-  // 0 = keep source height; otherwise cap (720/1080). Applied once we re-encode (Phase 2).
+  // 0 = keep source height; otherwise cap (720/1080). Applied when we re-encode.
   @Field val resolution: Int = 0
   @Field val bitrate: Int = 0
+  // 4×5 color matrix (20 numbers); empty = no filter → passthrough
+  @Field val colorMatrix: List<Double> = emptyList()
 }
