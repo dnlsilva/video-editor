@@ -58,6 +58,8 @@ export type Overlay = TextOverlay | StickerOverlay;
 export type AudioTrack = {
   uri: string;
   title?: string;
+  /** total length of the source, seconds (0 = unknown until the player reports it) */
+  duration: number;
   /** seconds into the source where the chosen segment starts */
   trimStart: number;
   /** seconds into the source where it ends */

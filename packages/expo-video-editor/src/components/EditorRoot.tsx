@@ -1,9 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useAudioPreview } from '../hooks/useAudioPreview';
 import { useExport, type ExportCallbacks } from '../hooks/useExport';
 import { type ActivePanel, useEditorStore } from '../state/store';
 import { type EditorTheme, useTheme } from '../theme';
 import type { ExportOptions } from '../types';
+import { AudioPanel } from './audio/AudioPanel';
 import { ExportOverlay } from './ExportOverlay';
 import { FilterCarousel } from './filters/FilterCarousel';
 import { GiphyPicker } from './giphy/GiphyPicker';
@@ -26,9 +28,24 @@ export function EditorRoot({ exportOptions, callbacks, onCancel }: Props) {
   const setActivePanel = useEditorStore((s) => s.setActivePanel);
   const addTextOverlay = useEditorStore((s) => s.addTextOverlay);
   const giphyApiKey = useEditorStore((s) => s.giphyApiKey);
+  const audio = useEditorStore((s) => s.audio);
+  const audioPicker = useEditorStore((s) => s.audioPicker);
+  const setAudioFromSource = useEditorStore((s) => s.setAudioFromSource);
   const { run, cancel } = useExport(exportOptions, callbacks);
 
+  useAudioPreview();
+
   const toggle = (panel: ActivePanel) => setActivePanel(activePanel === panel ? 'none' : panel);
+
+  const onMusic = async () => {
+    if (audio) {
+      setActivePanel('audio');
+      return;
+    }
+    if (!audioPicker) return;
+    const source = await audioPicker();
+    if (source) setAudioFromSource(source);
+  };
 
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
@@ -50,6 +67,9 @@ export function EditorRoot({ exportOptions, callbacks, onCancel }: Props) {
             {giphyApiKey ? (
               <ToolButton label="GIF" active={activePanel === 'giphy'} onPress={() => setActivePanel('giphy')} theme={theme} />
             ) : null}
+            {audioPicker || audio ? (
+              <ToolButton label="Music" active={activePanel === 'audio'} onPress={onMusic} theme={theme} />
+            ) : null}
           </View>
           <Pressable style={[styles.exportBtn, { backgroundColor: theme.accent }]} onPress={() => run()}>
             <Text style={styles.exportText}>Export</Text>
@@ -59,6 +79,7 @@ export function EditorRoot({ exportOptions, callbacks, onCancel }: Props) {
 
       <TextEditorSheet />
       <GiphyPicker />
+      <AudioPanel />
 
       <ExportOverlay
         onCancel={() => {

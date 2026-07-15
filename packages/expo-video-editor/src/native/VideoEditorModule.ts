@@ -17,6 +17,16 @@ export type NativeOverlay = {
   rotationDeg: number;
 };
 
+export type NativeAudio = {
+  /** local file uri (remote sources are downloaded before export) */
+  uri: string;
+  trimStartMs: number;
+  trimEndMs: number;
+  /** 0..1 */
+  volume: number;
+  loop: boolean;
+};
+
 export type NativeExportPayload = {
   sourceUri: string;
   startMs: number;
@@ -29,6 +39,10 @@ export type NativeExportPayload = {
   colorMatrix: number[];
   /** overlays burned in at export (empty = none) */
   overlays: NativeOverlay[];
+  /** background music to mix, or null */
+  audio: NativeAudio | null;
+  /** volume of the source's own audio, 0..1 */
+  originalVolume: number;
 };
 
 export type NativeExportResult = {

@@ -75,6 +75,25 @@ export async function exportVideo(
 ): Promise<ExportResult> {
   const overlays = await buildOverlayPayload(state);
 
+  let audio: NativeExportPayload['audio'] = null;
+  if (state.audio) {
+    let uri = state.audio.uri;
+    if (/^https?:/i.test(uri)) {
+      try {
+        uri = await downloadToCache(uri);
+      } catch (e) {
+        throw toEditorError(e, 'AUDIO_LOAD');
+      }
+    }
+    audio = {
+      uri,
+      trimStartMs: Math.round(state.audio.trimStart * 1000),
+      trimEndMs: Math.round(state.audio.trimEnd * 1000),
+      volume: state.audio.volume,
+      loop: state.audio.loop,
+    };
+  }
+
   const payload: NativeExportPayload = {
     sourceUri: state.source.uri,
     startMs: Math.round(state.trim.start * 1000),
@@ -84,6 +103,8 @@ export async function exportVideo(
     // empty for the identity filter so trim-only stays a passthrough (no re-encode)
     colorMatrix: isIdentityFilter(state.filter) ? [] : getFilterMatrix(state.filter),
     overlays,
+    audio,
+    originalVolume: state.originalVolume,
   };
 
   const sub = onProgress

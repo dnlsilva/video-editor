@@ -1,3 +1,4 @@
+import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
@@ -22,11 +23,18 @@ export default function App() {
     }
   };
 
+  const onPickAudio = async () => {
+    const res = await DocumentPicker.getDocumentAsync({ type: 'audio/*', copyToCacheDirectory: true });
+    if (res.canceled || !res.assets[0]) return null;
+    return { uri: res.assets[0].uri, title: res.assets[0].name };
+  };
+
   if (videoUri) {
     return (
       <VideoEditor
         source={{ uri: videoUri }}
         giphy={GIPHY_API_KEY ? { apiKey: GIPHY_API_KEY } : undefined}
+        audio={{ onPickAudio }}
         onExportComplete={(r) => {
           setExported(r);
           setVideoUri(null);

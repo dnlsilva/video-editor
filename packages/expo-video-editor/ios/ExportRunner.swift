@@ -3,8 +3,9 @@ import Foundation
 
 /**
  * Single-pass native export via AVFoundation.
- * Phase 1: trim only → passthrough preset (no re-encode), near-instant.
- * Phase 2 swaps to a re-encoding preset + AVMutableVideoComposition for filters.
+ * - trim only → passthrough preset (no re-encode)
+ * - filter/overlays → re-encode + FrameComposer video composition
+ * - music → trimmed AVMutableComposition + AVAudioMix (trim baked into the composition)
  */
 class ExportRunner {
   private var session: AVAssetExportSession?
@@ -20,57 +21,78 @@ class ExportRunner {
       reject("SOURCE_LOAD", "Invalid source URI")
       return
     }
-    let asset = AVURLAsset(url: url)
-    // A filter or overlay needs a re-encoding preset + composition; trim-only stays passthrough.
-    let hasComposition = payload.colorMatrix.count >= 20 || !payload.overlays.isEmpty
-    let preset = hasComposition ? AVAssetExportPresetHighestQuality : AVAssetExportPresetPassthrough
-    guard let session = AVAssetExportSession(asset: asset, presetName: preset) else {
-      reject("EXPORT_FAILED", "Could not create export session")
-      return
-    }
+    let source = AVURLAsset(url: url)
 
-    let outURL = FileManager.default.temporaryDirectory
-      .appendingPathComponent("vieditor-export-\(UUID().uuidString).mp4")
-    session.outputURL = outURL
-    session.outputFileType = .mp4
-    session.shouldOptimizeForNetworkUse = true
+    Task {
+      do {
+        let hasComposition = payload.colorMatrix.count >= 20 || !payload.overlays.isEmpty
+        let hasAudio = payload.audio != nil
 
-    if payload.endMs > payload.startMs {
-      let start = CMTime(value: CMTimeValue(payload.startMs), timescale: 1000)
-      let duration = CMTime(value: CMTimeValue(payload.endMs - payload.startMs), timescale: 1000)
-      session.timeRange = CMTimeRange(start: start, duration: duration)
-    }
-    if hasComposition {
-      session.videoComposition = FrameComposer.videoComposition(
-        for: asset,
-        matrix: payload.colorMatrix,
-        overlays: payload.overlays
-      )
-    }
-    self.session = session
-
-    DispatchQueue.main.async {
-      self.progressTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
-        onProgress(Double(session.progress))
-      }
-    }
-
-    session.exportAsynchronously { [weak self] in
-      DispatchQueue.main.async {
-        self?.progressTimer?.invalidate()
-        self?.progressTimer = nil
-      }
-      switch session.status {
-      case .completed:
-        onProgress(1.0)
-        Task {
-          let result = await Self.readResult(outURL)
-          resolve(result)
+        let exportAsset: AVAsset
+        var audioMix: AVAudioMix?
+        var trimBaked = false
+        if hasAudio {
+          let (composition, mix) = try await AudioMixBuilder.build(source: source, payload: payload)
+          exportAsset = composition
+          audioMix = mix
+          trimBaked = true
+        } else {
+          exportAsset = source
         }
-      case .cancelled:
-        reject("CANCELLED", "Export cancelled")
-      default:
-        reject("EXPORT_FAILED", session.error?.localizedDescription ?? "Export failed")
+
+        let needsReencode = hasComposition || hasAudio
+        let preset = needsReencode ? AVAssetExportPresetHighestQuality : AVAssetExportPresetPassthrough
+        guard let session = AVAssetExportSession(asset: exportAsset, presetName: preset) else {
+          reject("EXPORT_FAILED", "Could not create export session")
+          return
+        }
+
+        let outURL = FileManager.default.temporaryDirectory
+          .appendingPathComponent("vieditor-export-\(UUID().uuidString).mp4")
+        session.outputURL = outURL
+        session.outputFileType = .mp4
+        session.shouldOptimizeForNetworkUse = true
+
+        if !trimBaked, payload.endMs > payload.startMs {
+          let start = CMTime(value: CMTimeValue(payload.startMs), timescale: 1000)
+          let duration = CMTime(value: CMTimeValue(payload.endMs - payload.startMs), timescale: 1000)
+          session.timeRange = CMTimeRange(start: start, duration: duration)
+        }
+        if hasComposition {
+          session.videoComposition = FrameComposer.videoComposition(
+            for: exportAsset,
+            matrix: payload.colorMatrix,
+            overlays: payload.overlays
+          )
+        }
+        if let audioMix = audioMix {
+          session.audioMix = audioMix
+        }
+        self.session = session
+
+        await MainActor.run {
+          self.progressTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
+            onProgress(Double(session.progress))
+          }
+        }
+
+        session.exportAsynchronously { [weak self] in
+          Task { @MainActor in
+            self?.progressTimer?.invalidate()
+            self?.progressTimer = nil
+          }
+          switch session.status {
+          case .completed:
+            onProgress(1.0)
+            Task { resolve(await Self.readResult(outURL)) }
+          case .cancelled:
+            reject("CANCELLED", "Export cancelled")
+          default:
+            reject("EXPORT_FAILED", session.error?.localizedDescription ?? "Export failed")
+          }
+        }
+      } catch {
+        reject("EXPORT_FAILED", error.localizedDescription)
       }
     }
   }

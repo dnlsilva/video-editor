@@ -22,6 +22,14 @@ class OverlayRecord : Record {
   @Field val rotationDeg: Double = 0.0
 }
 
+class AudioRecord : Record {
+  @Field val uri: String = ""
+  @Field val trimStartMs: Int = 0
+  @Field val trimEndMs: Int = 0
+  @Field val volume: Double = 1.0
+  @Field val loop: Boolean = true
+}
+
 class ExportPayload : Record {
   @Field val sourceUri: String = ""
   @Field val startMs: Int = 0
@@ -33,4 +41,8 @@ class ExportPayload : Record {
   @Field val colorMatrix: List<Double> = emptyList()
   // rasterized overlays burned in at export
   @Field val overlays: List<OverlayRecord> = emptyList()
+  // background music to mix, or null
+  @Field val audio: AudioRecord? = null
+  // volume of the source's own audio, 0..1
+  @Field val originalVolume: Double = 1.0
 }

@@ -19,6 +19,14 @@ struct OverlayRecord: Record {
   @Field var rotationDeg: Double = 0.0
 }
 
+struct AudioRecord: Record {
+  @Field var uri: String = ""
+  @Field var trimStartMs: Int = 0
+  @Field var trimEndMs: Int = 0
+  @Field var volume: Double = 1
+  @Field var loop: Bool = true
+}
+
 struct ExportPayload: Record {
   @Field var sourceUri: String = ""
   @Field var startMs: Int = 0
@@ -30,4 +38,8 @@ struct ExportPayload: Record {
   @Field var colorMatrix: [Double] = []
   // rasterized overlays burned in at export
   @Field var overlays: [OverlayRecord] = []
+  // background music to mix, or nil
+  @Field var audio: AudioRecord?
+  // volume of the source's own audio, 0..1
+  @Field var originalVolume: Double = 1
 }

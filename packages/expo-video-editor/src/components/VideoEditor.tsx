@@ -11,6 +11,7 @@ import { EditorRoot } from './EditorRoot';
 export function VideoEditor(props: VideoEditorProps) {
   const init = useEditorStore((s) => s.init);
   const setGiphyApiKey = useEditorStore((s) => s.setGiphyApiKey);
+  const setAudioPicker = useEditorStore((s) => s.setAudioPicker);
   const theme = useMemo(() => mergeTheme(props.theme), [props.theme]);
 
   useEffect(() => {
@@ -20,6 +21,10 @@ export function VideoEditor(props: VideoEditorProps) {
   useEffect(() => {
     setGiphyApiKey(props.giphy?.apiKey ?? null);
   }, [props.giphy?.apiKey, setGiphyApiKey]);
+
+  useEffect(() => {
+    setAudioPicker(props.audio?.onPickAudio ?? null);
+  }, [props.audio?.onPickAudio, setAudioPicker]);
 
   const callbacks = useMemo(
     () => ({

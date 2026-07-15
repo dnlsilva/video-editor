@@ -11,6 +11,9 @@ import android.os.Handler
 import android.os.Looper
 import androidx.media3.common.Effect
 import androidx.media3.common.MediaItem
+import androidx.media3.common.audio.AudioProcessor
+import androidx.media3.common.audio.ChannelMixingAudioProcessor
+import androidx.media3.common.audio.ChannelMixingMatrix
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.BitmapOverlay
 import androidx.media3.effect.OverlayEffect
@@ -18,6 +21,7 @@ import androidx.media3.effect.StaticOverlaySettings
 import androidx.media3.effect.TextureOverlay
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.EditedMediaItem
+import androidx.media3.transformer.EditedMediaItemSequence
 import androidx.media3.transformer.Effects
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
@@ -87,8 +91,15 @@ class ExportRunner(
             videoEffects.add(OverlayEffect(ImmutableList.copyOf(overlays)))
           }
         }
-        val edited = EditedMediaItem.Builder(mediaItem)
-          .setEffects(Effects(emptyList(), videoEffects))
+        val audio = payload.audio
+        val originalAudioProcessors: List<AudioProcessor> =
+          if (audio != null && payload.originalVolume != 1.0) {
+            listOf(volumeProcessor(payload.originalVolume.toFloat()))
+          } else {
+            emptyList()
+          }
+        val videoEdited = EditedMediaItem.Builder(mediaItem)
+          .setEffects(Effects(originalAudioProcessors, videoEffects))
           .build()
 
         val t = Transformer.Builder(context)
@@ -111,7 +122,32 @@ class ExportRunner(
           .build()
 
         transformer = t
-        t.start(edited, outFile.absolutePath)
+        if (audio != null) {
+          // Newest Media3 area (mixing audio across sequences). Documented fallback if a
+          // device chokes: decode+mix PCM manually (see PLAN.md §8).
+          val clipping = if (audio.trimEndMs > audio.trimStartMs) {
+            MediaItem.ClippingConfiguration.Builder()
+              .setStartPositionMs(audio.trimStartMs.toLong())
+              .setEndPositionMs(audio.trimEndMs.toLong())
+              .build()
+          } else {
+            MediaItem.ClippingConfiguration.UNSET
+          }
+          val musicItem = MediaItem.Builder()
+            .setUri(Uri.parse(audio.uri))
+            .setClippingConfiguration(clipping)
+            .build()
+          val musicEdited = EditedMediaItem.Builder(musicItem)
+            .setRemoveVideo(true)
+            .setEffects(Effects(listOf(volumeProcessor(audio.volume.toFloat())), emptyList()))
+            .build()
+          val videoSequence = EditedMediaItemSequence.Builder(videoEdited).build()
+          val musicSequence = EditedMediaItemSequence.Builder(musicEdited).setIsLooping(audio.loop).build()
+          val composition = Composition.Builder(videoSequence, musicSequence).build()
+          t.start(composition, outFile.absolutePath)
+        } else {
+          t.start(videoEdited, outFile.absolutePath)
+        }
         startPolling()
       } catch (e: Exception) {
         promise.reject("EXPORT_FAILED", e.message ?: "Export setup failed", e)
@@ -134,6 +170,14 @@ class ExportRunner(
   private fun stopPolling() {
     polling = false
     mainHandler.removeCallbacks(poller)
+  }
+
+  private fun volumeProcessor(volume: Float): AudioProcessor {
+    // Scale the identity channel-mixing matrix by the gain, covering mono + stereo inputs.
+    val processor = ChannelMixingAudioProcessor()
+    processor.putChannelMixingMatrix(ChannelMixingMatrix.create(1, 1).scaleBy(volume))
+    processor.putChannelMixingMatrix(ChannelMixingMatrix.create(2, 2).scaleBy(volume))
+    return processor
   }
 
   private fun readSourceSize(uri: String): Pair<Int, Int> {

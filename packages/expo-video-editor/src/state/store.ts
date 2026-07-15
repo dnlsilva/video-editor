@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import {
   IDENTITY_TRANSFORM,
+  type AudioSource,
   type AudioTrack,
   type EditorState,
   type Overlay,
@@ -41,6 +42,8 @@ export type EditorStore = {
   selectedOverlayId: string | null;
   /** host-provided Giphy API key (config, survives init) */
   giphyApiKey: string | null;
+  /** host-provided audio source resolver (config, survives init) */
+  audioPicker: (() => Promise<AudioSource | null>) | null;
 
   // ── actions ───────────────────────────────────────────────────────────────
   init: (source: VideoSource) => void;
@@ -61,6 +64,11 @@ export type EditorStore = {
   removeOverlay: (id: string) => void;
   selectOverlay: (id: string | null) => void;
   setGiphyApiKey: (key: string | null) => void;
+  setAudioPicker: (picker: (() => Promise<AudioSource | null>) | null) => void;
+  setAudioFromSource: (source: AudioSource) => void;
+  updateAudio: (patch: Partial<AudioTrack>) => void;
+  clearAudio: () => void;
+  setOriginalVolume: (v: number) => void;
   getEditorState: () => EditorState;
 };
 
@@ -87,6 +95,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   previewSize: { width: 0, height: 0 },
   selectedOverlayId: null,
   giphyApiKey: null,
+  audioPicker: null,
 
   init: (source) =>
     set({
@@ -159,6 +168,24 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     })),
   selectOverlay: (selectedOverlayId) => set({ selectedOverlayId }),
   setGiphyApiKey: (giphyApiKey) => set({ giphyApiKey }),
+
+  setAudioPicker: (audioPicker) => set({ audioPicker }),
+  setAudioFromSource: (source) =>
+    set({
+      audio: {
+        uri: source.uri,
+        title: source.title,
+        duration: source.duration && source.duration > 0 ? source.duration : 0,
+        trimStart: 0,
+        trimEnd: source.duration && source.duration > 0 ? source.duration : 0,
+        volume: 1,
+        loop: true,
+      },
+      activePanel: 'audio',
+    }),
+  updateAudio: (patch) => set((s) => ({ audio: s.audio ? { ...s.audio, ...patch } : s.audio })),
+  clearAudio: () => set({ audio: null, activePanel: 'none' }),
+  setOriginalVolume: (originalVolume) => set({ originalVolume }),
 
   getEditorState: () => {
     const s = get();
