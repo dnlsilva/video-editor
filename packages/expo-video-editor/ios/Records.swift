@@ -11,6 +11,7 @@ struct SeekRecord: Record {
 
 struct OverlayRecord: Record {
   @Field var uri: String = ""
+  @Field var animated: Bool = false
   @Field var centerX: Double = 0.5
   @Field var centerY: Double = 0.5
   @Field var widthFraction: Double = 0.0

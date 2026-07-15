@@ -1,22 +1,36 @@
 import AVFoundation
 import CoreImage
+import ImageIO
 
 /**
  * One video composition that applies the color matrix and then composites overlays, so a
- * single re-encode covers filter + text + GIF. Overlays are placed by fraction of the frame
- * (CI's origin is bottom-left, so centerY is flipped) and rotated clockwise to match the UI.
+ * single re-encode covers filter + text + GIF. Animated overlays are decoded to frames and
+ * the frame matching the current composition time (looping) is drawn. Overlays are placed by
+ * fraction of the frame (CI origin is bottom-left → centerY flipped), rotated clockwise.
  */
 enum FrameComposer {
+  private struct LoadedOverlay {
+    let frames: [CIImage]
+    /** cumulative end time of each frame, seconds */
+    let cumulative: [Double]
+    let total: Double
+    let rec: OverlayRecord
+
+    func image(at time: Double) -> CIImage {
+      if frames.count <= 1 || total <= 0 { return frames[0] }
+      let t = time.truncatingRemainder(dividingBy: total)
+      for (i, end) in cumulative.enumerated() where t < end { return frames[i] }
+      return frames[frames.count - 1]
+    }
+  }
+
   static func videoComposition(
     for asset: AVAsset,
     matrix: [Double],
     overlays: [OverlayRecord]
   ) -> AVVideoComposition? {
     let filter = ColorMatrixFilter.makeFilter(matrix)
-    let loaded: [(CIImage, OverlayRecord)] = overlays.compactMap { rec in
-      guard let image = loadImage(rec.uri) else { return nil }
-      return (image, rec)
-    }
+    let loaded = overlays.compactMap { load($0) }
     if filter == nil && loaded.isEmpty { return nil }
 
     return AVMutableVideoComposition(asset: asset) { request in
@@ -26,8 +40,9 @@ enum FrameComposer {
         filter.setValue(image, forKey: kCIInputImageKey)
         image = filter.outputImage?.cropped(to: extent) ?? image
       }
-      for (overlay, rec) in loaded {
-        image = composite(overlay: overlay, over: image, frame: extent, rec: rec)
+      let time = request.compositionTime.seconds
+      for overlay in loaded {
+        image = composite(overlay: overlay.image(at: time), over: image, frame: extent, rec: overlay.rec)
       }
       request.finish(with: image, context: nil)
     }
@@ -49,8 +64,38 @@ enum FrameComposer {
     return overlay.transformed(by: transform).composited(over: base)
   }
 
-  private static func loadImage(_ uri: String) -> CIImage? {
-    let url: URL = uri.hasPrefix("/") ? URL(fileURLWithPath: uri) : (URL(string: uri) ?? URL(fileURLWithPath: uri))
-    return CIImage(contentsOf: url)
+  private static func load(_ rec: OverlayRecord) -> LoadedOverlay? {
+    guard let url = fileURL(rec.uri) else { return nil }
+    if rec.animated, let source = CGImageSourceCreateWithURL(url as CFURL, nil) {
+      let count = CGImageSourceGetCount(source)
+      if count > 1 {
+        var frames: [CIImage] = []
+        var cumulative: [Double] = []
+        var acc = 0.0
+        for i in 0..<count {
+          guard let cg = CGImageSourceCreateImageAtIndex(source, i, nil) else { continue }
+          frames.append(CIImage(cgImage: cg))
+          acc += gifDelay(source, i)
+          cumulative.append(acc)
+        }
+        if !frames.isEmpty {
+          return LoadedOverlay(frames: frames, cumulative: cumulative, total: acc, rec: rec)
+        }
+      }
+    }
+    guard let image = CIImage(contentsOf: url) else { return nil }
+    return LoadedOverlay(frames: [image], cumulative: [0], total: 0, rec: rec)
+  }
+
+  private static func gifDelay(_ source: CGImageSource, _ index: Int) -> Double {
+    guard let props = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any],
+          let gif = props[kCGImagePropertyGIFDictionary] as? [CFString: Any] else { return 0.1 }
+    let unclamped = gif[kCGImagePropertyGIFUnclampedDelayTime] as? Double
+    let delay = unclamped ?? (gif[kCGImagePropertyGIFDelayTime] as? Double) ?? 0.1
+    return delay > 0 ? delay : 0.1
+  }
+
+  private static func fileURL(_ uri: String) -> URL? {
+    uri.hasPrefix("/") ? URL(fileURLWithPath: uri) : (URL(string: uri) ?? URL(fileURLWithPath: uri))
   }
 }

@@ -6,6 +6,7 @@ import Native, { type NativeExportPayload, type NativeOverlay } from '../native/
 import { getOverlayRef } from '../overlays/captureRegistry';
 import { useEditorStore } from '../state/store';
 import type { EditorState, ExportOptions, ExportResult } from '../types';
+import { downloadToCache } from './mediaCache';
 
 /**
  * Rasterize each overlay's (unscaled) content view to a PNG and express its placement as
@@ -18,18 +19,34 @@ async function buildOverlayPayload(state: EditorState): Promise<NativeOverlay[]>
 
   const result: NativeOverlay[] = [];
   for (const ov of state.overlays) {
-    const ref = getOverlayRef(ov.id);
     const baseW = ov.baseWidth ?? 0;
     const baseH = ov.baseHeight ?? 0;
-    if (!ref || baseW <= 0 || baseH <= 0) continue;
+    if (baseW <= 0 || baseH <= 0) continue;
+
     let uri: string;
-    try {
-      uri = await captureRef(ref, { format: 'png', quality: 1, result: 'tmpfile' });
-    } catch {
-      continue; // skip an overlay that fails to rasterize rather than failing the export
+    let animated: boolean;
+    if (ov.type === 'text') {
+      const ref = getOverlayRef(ov.id);
+      if (!ref) continue;
+      try {
+        uri = await captureRef(ref, { format: 'png', quality: 1, result: 'tmpfile' });
+      } catch {
+        continue; // skip an overlay that fails to rasterize rather than failing the export
+      }
+      animated = false;
+    } else {
+      // GIF/sticker: hand native the original animated file to decode + burn in per frame
+      try {
+        uri = await downloadToCache(ov.exportUri);
+      } catch {
+        continue;
+      }
+      animated = true;
     }
+
     result.push({
       uri,
+      animated,
       centerX: ov.transform.x,
       centerY: ov.transform.y,
       widthFraction: (baseW * ov.transform.scale) / pw,

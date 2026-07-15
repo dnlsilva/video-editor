@@ -1,10 +1,12 @@
 import { NativeModule, requireNativeModule } from 'expo';
 
 /** Payload crossing the bridge for an export. Extended per phase (filter, overlays, audio). */
-/** A rasterized overlay (text/sticker/GIF frame) burned into the video at export. */
+/** An overlay burned into the video at export. */
 export type NativeOverlay = {
-  /** file uri of the rasterized PNG (single frame; animated GIFs pass many, see Phase 4) */
+  /** file uri: a rasterized PNG when static, or a local GIF file when animated */
   uri: string;
+  /** true → decode GIF frames natively and animate over the clip; false → static bitmap */
+  animated: boolean;
   /** center of the overlay, normalized 0..1 relative to the video frame */
   centerX: number;
   centerY: number;

@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { VideoEditor, type ExportResult } from 'expo-video-editor';
 
+// Put your GIPHY API key here to enable the GIF button (https://developers.giphy.com).
+const GIPHY_API_KEY = '';
+
 export default function App() {
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [exported, setExported] = useState<ExportResult | null>(null);
@@ -23,6 +26,7 @@ export default function App() {
     return (
       <VideoEditor
         source={{ uri: videoUri }}
+        giphy={GIPHY_API_KEY ? { apiKey: GIPHY_API_KEY } : undefined}
         onExportComplete={(r) => {
           setExported(r);
           setVideoUri(null);

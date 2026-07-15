@@ -10,11 +10,16 @@ import { EditorRoot } from './EditorRoot';
 /** Full-screen editor. Owns the store lifecycle and provides theme + gesture root. */
 export function VideoEditor(props: VideoEditorProps) {
   const init = useEditorStore((s) => s.init);
+  const setGiphyApiKey = useEditorStore((s) => s.setGiphyApiKey);
   const theme = useMemo(() => mergeTheme(props.theme), [props.theme]);
 
   useEffect(() => {
     init(props.source);
   }, [props.source.uri, init]);
+
+  useEffect(() => {
+    setGiphyApiKey(props.giphy?.apiKey ?? null);
+  }, [props.giphy?.apiKey, setGiphyApiKey]);
 
   const callbacks = useMemo(
     () => ({

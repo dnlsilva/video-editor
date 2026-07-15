@@ -3,6 +3,8 @@ package expo.modules.videoeditor
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Movie
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Handler
@@ -13,6 +15,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.BitmapOverlay
 import androidx.media3.effect.OverlayEffect
 import androidx.media3.effect.StaticOverlaySettings
+import androidx.media3.effect.TextureOverlay
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.Effects
@@ -24,6 +27,7 @@ import com.google.common.collect.ImmutableList
 import expo.modules.kotlin.Promise
 import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
 
 /**
  * Single-pass native export via Media3 Transformer.
@@ -147,36 +151,62 @@ class ExportRunner(
     }
   }
 
-  private fun loadBitmap(uriStr: String): Bitmap? {
+  private fun openStream(uriStr: String): InputStream? {
     return try {
       val uri = Uri.parse(uriStr)
-      val stream = if (uri.scheme == null || uri.scheme == "file") {
-        FileInputStream(uri.path ?: uriStr)
-      } else {
-        context.contentResolver.openInputStream(uri)
-      }
-      stream.use { BitmapFactory.decodeStream(it) }
+      if (uri.scheme == null || uri.scheme == "file") FileInputStream(uri.path ?: uriStr)
+      else context.contentResolver.openInputStream(uri)
     } catch (_: Exception) {
       null
     }
   }
 
-  private fun buildOverlay(rec: OverlayRecord, outW: Int, outH: Int): BitmapOverlay? {
-    if (outW <= 0 || outH <= 0) return null
-    val bmp = loadBitmap(rec.uri) ?: return null
-    if (bmp.width <= 0 || bmp.height <= 0) return null
-    val sx = (rec.widthFraction * outW / bmp.width).toFloat()
-    val sy = (rec.heightFraction * outH / bmp.height).toFloat()
+  private fun loadBitmap(uriStr: String): Bitmap? =
+    openStream(uriStr)?.use { runCatching { BitmapFactory.decodeStream(it) }.getOrNull() }
+
+  private fun decodeGifFrames(uriStr: String): Pair<List<Bitmap>, LongArray>? {
+    val movie = openStream(uriStr)?.use { Movie.decodeStream(it) } ?: return null
+    val w = movie.width()
+    val h = movie.height()
+    if (w <= 0 || h <= 0) return null
+    val duration = movie.duration().coerceAtLeast(1)
+    val stepMs = 50 // sample ~20fps; Movie exposes only total duration, not per-frame delays
+    val frames = mutableListOf<Bitmap>()
+    var t = 0
+    while (t < duration) {
+      val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+      movie.setTime(t)
+      movie.draw(Canvas(bmp), 0f, 0f)
+      frames.add(bmp)
+      t += stepMs
+    }
+    if (frames.isEmpty()) return null
+    return Pair(frames, LongArray(frames.size) { stepMs * 1000L })
+  }
+
+  private fun overlaySettings(rec: OverlayRecord, bmpW: Int, bmpH: Int, outW: Int, outH: Int): StaticOverlaySettings {
+    val sx = (rec.widthFraction * outW / bmpW).toFloat()
+    val sy = (rec.heightFraction * outH / bmpH).toFloat()
     // Media3 anchors are -1..1 (0 = center); background y is +up while our centerY is +down.
     val bgX = (rec.centerX * 2 - 1).toFloat()
     val bgY = (1 - rec.centerY * 2).toFloat()
-    val settings = StaticOverlaySettings.Builder()
+    return StaticOverlaySettings.Builder()
       .setScale(sx, sy)
       .setRotationDegrees((-rec.rotationDeg).toFloat())
       .setOverlayFrameAnchor(0f, 0f)
       .setBackgroundFrameAnchor(bgX, bgY)
       .build()
-    return BitmapOverlay.createStaticBitmapOverlay(bmp, settings)
+  }
+
+  private fun buildOverlay(rec: OverlayRecord, outW: Int, outH: Int): TextureOverlay? {
+    if (outW <= 0 || outH <= 0) return null
+    if (rec.animated) {
+      val (frames, durations) = decodeGifFrames(rec.uri) ?: return null
+      return GifOverlay(frames, durations, overlaySettings(rec, frames[0].width, frames[0].height, outW, outH))
+    }
+    val bmp = loadBitmap(rec.uri) ?: return null
+    if (bmp.width <= 0 || bmp.height <= 0) return null
+    return BitmapOverlay.createStaticBitmapOverlay(bmp, overlaySettings(rec, bmp.width, bmp.height, outW, outH))
   }
 
   private fun readResult(file: File, payload: ExportPayload): Map<String, Any> {

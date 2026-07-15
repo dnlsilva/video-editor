@@ -14,6 +14,7 @@ class SeekRecord : Record {
 
 class OverlayRecord : Record {
   @Field val uri: String = ""
+  @Field val animated: Boolean = false
   @Field val centerX: Double = 0.5
   @Field val centerY: Double = 0.5
   @Field val widthFraction: Double = 0.0

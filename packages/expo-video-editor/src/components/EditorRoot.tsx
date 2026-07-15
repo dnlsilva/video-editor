@@ -6,6 +6,7 @@ import { type EditorTheme, useTheme } from '../theme';
 import type { ExportOptions } from '../types';
 import { ExportOverlay } from './ExportOverlay';
 import { FilterCarousel } from './filters/FilterCarousel';
+import { GiphyPicker } from './giphy/GiphyPicker';
 import { TextEditorSheet } from './overlays/TextEditorSheet';
 import { PreviewSurface } from './PreviewSurface';
 import { TrimTimeline } from './timeline/TrimTimeline';
@@ -24,6 +25,7 @@ export function EditorRoot({ exportOptions, callbacks, onCancel }: Props) {
   const activePanel = useEditorStore((s) => s.activePanel);
   const setActivePanel = useEditorStore((s) => s.setActivePanel);
   const addTextOverlay = useEditorStore((s) => s.addTextOverlay);
+  const giphyApiKey = useEditorStore((s) => s.giphyApiKey);
   const { run, cancel } = useExport(exportOptions, callbacks);
 
   const toggle = (panel: ActivePanel) => setActivePanel(activePanel === panel ? 'none' : panel);
@@ -45,6 +47,9 @@ export function EditorRoot({ exportOptions, callbacks, onCancel }: Props) {
           <View style={styles.tools}>
             <ToolButton label="Filters" active={activePanel === 'filter'} onPress={() => toggle('filter')} theme={theme} />
             <ToolButton label="Text" active={false} onPress={() => addTextOverlay()} theme={theme} />
+            {giphyApiKey ? (
+              <ToolButton label="GIF" active={activePanel === 'giphy'} onPress={() => setActivePanel('giphy')} theme={theme} />
+            ) : null}
           </View>
           <Pressable style={[styles.exportBtn, { backgroundColor: theme.accent }]} onPress={() => run()}>
             <Text style={styles.exportText}>Export</Text>
@@ -53,6 +58,7 @@ export function EditorRoot({ exportOptions, callbacks, onCancel }: Props) {
       </View>
 
       <TextEditorSheet />
+      <GiphyPicker />
 
       <ExportOverlay
         onCancel={() => {

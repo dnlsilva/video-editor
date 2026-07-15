@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 
-import { IDENTITY_TRANSFORM, type AudioTrack, type EditorState, type Overlay, type TextOverlay, type VideoMeta, type VideoSource } from '../types';
+import {
+  IDENTITY_TRANSFORM,
+  type AudioTrack,
+  type EditorState,
+  type Overlay,
+  type StickerOverlay,
+  type TextOverlay,
+  type VideoMeta,
+  type VideoSource,
+} from '../types';
 
 let overlayCounter = 0;
 const nextOverlayId = () => `ov_${Date.now().toString(36)}_${overlayCounter++}`;
@@ -30,6 +39,8 @@ export type EditorStore = {
   /** measured preview surface size in px (for overlay placement + export rasterization) */
   previewSize: { width: number; height: number };
   selectedOverlayId: string | null;
+  /** host-provided Giphy API key (config, survives init) */
+  giphyApiKey: string | null;
 
   // ── actions ───────────────────────────────────────────────────────────────
   init: (source: VideoSource) => void;
@@ -45,9 +56,11 @@ export type EditorStore = {
   setExportProgress: (progress: number) => void;
   setPreviewSize: (width: number, height: number) => void;
   addTextOverlay: () => string;
+  addGifOverlay: (item: { previewUri: string; exportUri: string; aspectRatio: number }) => string;
   updateOverlay: (id: string, patch: Partial<Overlay>) => void;
   removeOverlay: (id: string) => void;
   selectOverlay: (id: string | null) => void;
+  setGiphyApiKey: (key: string | null) => void;
   getEditorState: () => EditorState;
 };
 
@@ -73,6 +86,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   seekNonce: 0,
   previewSize: { width: 0, height: 0 },
   selectedOverlayId: null,
+  giphyApiKey: null,
 
   init: (source) =>
     set({
@@ -121,6 +135,19 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set((s) => ({ overlays: [...s.overlays, overlay], selectedOverlayId: id, activePanel: 'text' }));
     return id;
   },
+  addGifOverlay: (item) => {
+    const id = nextOverlayId();
+    const overlay: StickerOverlay = {
+      id,
+      type: 'gif',
+      previewUri: item.previewUri,
+      exportUri: item.exportUri,
+      aspectRatio: item.aspectRatio > 0 ? item.aspectRatio : 1,
+      transform: { ...IDENTITY_TRANSFORM },
+    };
+    set((s) => ({ overlays: [...s.overlays, overlay], selectedOverlayId: id, activePanel: 'none' }));
+    return id;
+  },
   updateOverlay: (id, patch) =>
     set((s) => ({
       overlays: s.overlays.map((o) => (o.id === id ? ({ ...o, ...patch } as Overlay) : o)),
@@ -131,6 +158,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       selectedOverlayId: s.selectedOverlayId === id ? null : s.selectedOverlayId,
     })),
   selectOverlay: (selectedOverlayId) => set({ selectedOverlayId }),
+  setGiphyApiKey: (giphyApiKey) => set({ giphyApiKey }),
 
   getEditorState: () => {
     const s = get();
