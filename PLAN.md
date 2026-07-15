@@ -4,7 +4,9 @@
 >
 > Reference: [faeizfurqan17/expo-react-native-video-editor](https://github.com/faeizfurqan17/expo-react-native-video-editor) — we replicate the features, not the architecture.
 
-**Status:** Phase 0 complete (monorepo scaffolded, native module + example wired, `ping()` bridge verified headless). Phase 1 next. Pinned: Expo SDK 57, React Native 0.86, React 19.2.
+**Status:** Phases 0–6 implemented (TS typechecks clean; iOS project generation + pod install verified). Native compile + on-device runtime is the remaining acceptance step. Pinned: Expo SDK 57, React Native 0.86, React 19.2.
+
+**v1 gaps (documented):** `export.resolution`/`bitrate` plumbed but not yet applied (source resolution used); overlays always visible (no per-overlay `timeRange` UI); filter matrices are tunable approximations; Android audio mixing uses newest Media3 APIs (validate on device — fallback in §8).
 
 ---
 
