@@ -1,0 +1,14 @@
+{
+  "name": "video-editor-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace expo-video-editor",
+    "example": "npm run start --workspace example",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}

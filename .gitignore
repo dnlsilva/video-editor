@@ -1,0 +1,40 @@
+# deps
+node_modules/
+.npm/
+
+# build output
+packages/*/build/
+**/dist/
+
+# expo / rn native
+.expo/
+apps/*/ios/
+apps/*/android/
+!packages/*/ios/
+!packages/*/android/
+*.orig.*
+web-build/
+
+# native build artifacts
+**/Pods/
+**/*.xcworkspace/xcuserdata/
+**/.gradle/
+**/build/
+**/.cxx/
+**/*.keystore
+!debug.keystore
+
+# metro / caches
+.metro-health-check*
+**/.tamagui/
+*.tsbuildinfo
+
+# env & secrets
+.env*
+!.env.example
+
+# os / editor
+.DS_Store
+*.log
+.idea/
+.vscode/
