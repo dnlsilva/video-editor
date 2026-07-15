@@ -4,7 +4,7 @@
 >
 > Reference: [faeizfurqan17/expo-react-native-video-editor](https://github.com/faeizfurqan17/expo-react-native-video-editor) — we replicate the features, not the architecture.
 
-**Status:** planning — no code written yet.
+**Status:** Phase 0 complete (monorepo scaffolded, native module + example wired, `ping()` bridge verified headless). Phase 1 next. Pinned: Expo SDK 57, React Native 0.86, React 19.2.
 
 ---
 
@@ -370,13 +370,13 @@ Each phase ends with an acceptance criterion verifiable in the example app. **Ph
 
 ---
 
-## 10. Open questions (answer before Phase 0)
+## 10. Decisions (defaulted at Phase 0 — change any before it's expensive)
 
-1. **npm package name?** (suggestion: `@gleidson/expo-video-editor` or a product name)
-2. **Still image as source** (the reference supports it): stays out of v1?
-3. **Codec:** always H.264 (max compatibility) or optional HEVC (smaller file)? Suggestion: H.264 in v1.
-4. **Default export resolution:** 1080p cap (suggestion) or always the source's?
-5. **Time-windowed overlays** (text/GIF appearing only during a stretch of the video) in v1, or always visible start-to-end? Suggestion: always visible in v1 (`timeRange` stays in the model, UI comes in v2).
-6. **i18n:** UI strings in English with an override prop, or pt-BR default?
-7. **Monorepo manager:** bun, pnpm or npm workspaces? (affects DX only)
-8. **Minimum Expo SDK:** lock to the latest stable on Phase 0 day — ok?
+1. **npm package name:** `expo-video-editor` (unscoped). Android package `expo.modules.videoeditor`. → revisit before first publish (Phase 6) if a scoped/brand name is wanted; rename is a small sweep.
+2. **Still image as source:** out of v1.
+3. **Codec:** H.264 + AAC in v1 (max compatibility). HEVC deferred.
+4. **Default export resolution:** 1080p cap; `resolution: 'source'` opt-in.
+5. **Time-windowed overlays:** always visible in v1; `timeRange` stays in the model, UI in v2.
+6. **i18n:** English UI strings + `theme`/label override prop. No pt-BR bundle in v1.
+7. **Monorepo manager:** **npm workspaces** (no bun installed; pnpm's strict linking breaks RN autolinking).
+8. **Expo SDK:** **57** (RN 0.86, React 19.2) — latest stable at scaffold time.
