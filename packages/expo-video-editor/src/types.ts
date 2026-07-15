@@ -21,7 +21,10 @@ export const IDENTITY_TRANSFORM: Transform = { x: 0.5, y: 0.5, scale: 1, rotatio
 // Overlays (modeled now; text UI lands in Phase 3, GIF in Phase 4)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type TextOverlay = {
+/** Unscaled rendered size in preview px, measured at runtime — used for export rasterization. */
+export type OverlayBaseSize = { baseWidth?: number; baseHeight?: number };
+
+export type TextOverlay = OverlayBaseSize & {
   id: string;
   type: 'text';
   text: string;
@@ -35,7 +38,7 @@ export type TextOverlay = {
   timeRange?: [number, number];
 };
 
-export type StickerOverlay = {
+export type StickerOverlay = OverlayBaseSize & {
   id: string;
   type: 'gif' | 'sticker';
   previewUri: string;

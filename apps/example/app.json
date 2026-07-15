@@ -29,7 +29,9 @@
         {
           "photosPermission": "Allow $(PRODUCT_NAME) to access your videos so you can edit them."
         }
-      ]
+      ],
+      "expo-image",
+      "expo-audio"
     ]
   }
 }

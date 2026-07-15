@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 
-import type { AudioTrack, EditorState, Overlay, VideoMeta, VideoSource } from '../types';
+import { IDENTITY_TRANSFORM, type AudioTrack, type EditorState, type Overlay, type TextOverlay, type VideoMeta, type VideoSource } from '../types';
+
+let overlayCounter = 0;
+const nextOverlayId = () => `ov_${Date.now().toString(36)}_${overlayCounter++}`;
 
 export type ActivePanel = 'none' | 'trim' | 'filter' | 'text' | 'giphy' | 'audio';
 
@@ -24,6 +27,9 @@ export type EditorStore = {
   seekTarget: number;
   /** bumped on every seek request so the player re-seeks even to the same target */
   seekNonce: number;
+  /** measured preview surface size in px (for overlay placement + export rasterization) */
+  previewSize: { width: number; height: number };
+  selectedOverlayId: string | null;
 
   // ── actions ───────────────────────────────────────────────────────────────
   init: (source: VideoSource) => void;
@@ -37,6 +43,11 @@ export type EditorStore = {
   setActivePanel: (panel: ActivePanel) => void;
   setExporting: (exporting: boolean) => void;
   setExportProgress: (progress: number) => void;
+  setPreviewSize: (width: number, height: number) => void;
+  addTextOverlay: () => string;
+  updateOverlay: (id: string, patch: Partial<Overlay>) => void;
+  removeOverlay: (id: string) => void;
+  selectOverlay: (id: string | null) => void;
   getEditorState: () => EditorState;
 };
 
@@ -60,6 +71,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   exportProgress: 0,
   seekTarget: 0,
   seekNonce: 0,
+  previewSize: { width: 0, height: 0 },
+  selectedOverlayId: null,
 
   init: (source) =>
     set({
@@ -72,6 +85,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       exportProgress: 0,
       seekTarget: 0,
       seekNonce: 0,
+      selectedOverlayId: null,
     }),
 
   setMeta: (meta) =>
@@ -91,6 +105,32 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   setActivePanel: (activePanel) => set({ activePanel }),
   setExporting: (exporting) => set({ exporting }),
   setExportProgress: (exportProgress) => set({ exportProgress }),
+  setPreviewSize: (width, height) => set({ previewSize: { width, height } }),
+
+  addTextOverlay: () => {
+    const id = nextOverlayId();
+    const overlay: TextOverlay = {
+      id,
+      type: 'text',
+      text: '',
+      fontSize: 32,
+      color: '#ffffff',
+      align: 'center',
+      transform: { ...IDENTITY_TRANSFORM },
+    };
+    set((s) => ({ overlays: [...s.overlays, overlay], selectedOverlayId: id, activePanel: 'text' }));
+    return id;
+  },
+  updateOverlay: (id, patch) =>
+    set((s) => ({
+      overlays: s.overlays.map((o) => (o.id === id ? ({ ...o, ...patch } as Overlay) : o)),
+    })),
+  removeOverlay: (id) =>
+    set((s) => ({
+      overlays: s.overlays.filter((o) => o.id !== id),
+      selectedOverlayId: s.selectedOverlayId === id ? null : s.selectedOverlayId,
+    })),
+  selectOverlay: (selectedOverlayId) => set({ selectedOverlayId }),
 
   getEditorState: () => {
     const s = get();

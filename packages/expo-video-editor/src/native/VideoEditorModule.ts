@@ -1,6 +1,20 @@
 import { NativeModule, requireNativeModule } from 'expo';
 
 /** Payload crossing the bridge for an export. Extended per phase (filter, overlays, audio). */
+/** A rasterized overlay (text/sticker/GIF frame) burned into the video at export. */
+export type NativeOverlay = {
+  /** file uri of the rasterized PNG (single frame; animated GIFs pass many, see Phase 4) */
+  uri: string;
+  /** center of the overlay, normalized 0..1 relative to the video frame */
+  centerX: number;
+  centerY: number;
+  /** overlay size as a fraction of the video frame */
+  widthFraction: number;
+  heightFraction: number;
+  /** clockwise degrees */
+  rotationDeg: number;
+};
+
 export type NativeExportPayload = {
   sourceUri: string;
   startMs: number;
@@ -11,6 +25,8 @@ export type NativeExportPayload = {
   bitrate: number;
   /** 4×5 color matrix (20 numbers); empty = no filter → passthrough */
   colorMatrix: number[];
+  /** overlays burned in at export (empty = none) */
+  overlays: NativeOverlay[];
 };
 
 export type NativeExportResult = {

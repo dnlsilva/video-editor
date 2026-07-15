@@ -6,6 +6,7 @@ import { type EditorTheme, useTheme } from '../theme';
 import type { ExportOptions } from '../types';
 import { ExportOverlay } from './ExportOverlay';
 import { FilterCarousel } from './filters/FilterCarousel';
+import { TextEditorSheet } from './overlays/TextEditorSheet';
 import { PreviewSurface } from './PreviewSurface';
 import { TrimTimeline } from './timeline/TrimTimeline';
 
@@ -22,6 +23,7 @@ export function EditorRoot({ exportOptions, callbacks, onCancel }: Props) {
   const hasMeta = useEditorStore((s) => s.meta != null);
   const activePanel = useEditorStore((s) => s.activePanel);
   const setActivePanel = useEditorStore((s) => s.setActivePanel);
+  const addTextOverlay = useEditorStore((s) => s.addTextOverlay);
   const { run, cancel } = useExport(exportOptions, callbacks);
 
   const toggle = (panel: ActivePanel) => setActivePanel(activePanel === panel ? 'none' : panel);
@@ -40,12 +42,17 @@ export function EditorRoot({ exportOptions, callbacks, onCancel }: Props) {
         {hasMeta ? <TrimTimeline /> : null}
 
         <View style={styles.toolbar}>
-          <ToolButton label="Filters" active={activePanel === 'filter'} onPress={() => toggle('filter')} theme={theme} />
+          <View style={styles.tools}>
+            <ToolButton label="Filters" active={activePanel === 'filter'} onPress={() => toggle('filter')} theme={theme} />
+            <ToolButton label="Text" active={false} onPress={() => addTextOverlay()} theme={theme} />
+          </View>
           <Pressable style={[styles.exportBtn, { backgroundColor: theme.accent }]} onPress={() => run()}>
             <Text style={styles.exportText}>Export</Text>
           </Pressable>
         </View>
       </View>
+
+      <TextEditorSheet />
 
       <ExportOverlay
         onCancel={() => {
@@ -93,6 +100,7 @@ const styles = StyleSheet.create({
   playIcon: { color: 'rgba(255,255,255,0.9)', fontSize: 56 },
   bottom: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 28, gap: 14 },
   toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  tools: { flexDirection: 'row', gap: 10 },
   toolBtn: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20 },
   toolText: { fontSize: 14, fontWeight: '600' },
   exportBtn: { paddingHorizontal: 32, paddingVertical: 12, borderRadius: 24 },

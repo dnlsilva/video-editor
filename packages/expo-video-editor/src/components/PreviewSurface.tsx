@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { getFilterMatrix, isIdentityFilter } from '../filters/presets';
 import EditorVideoView from '../native/EditorVideoView';
 import { useEditorStore } from '../state/store';
+import { OverlayLayer } from './overlays/OverlayLayer';
 
 /** Hosts the native player and binds it to the store. Overlays (text/GIF) mount on top in later phases. */
 export function PreviewSurface() {
@@ -15,13 +16,17 @@ export function PreviewSurface() {
   const seekTarget = useEditorStore((s) => s.seekTarget);
   const setMeta = useEditorStore((s) => s.setMeta);
   const setPlayhead = useEditorStore((s) => s.setPlayhead);
+  const setPreviewSize = useEditorStore((s) => s.setPreviewSize);
 
   const colorMatrix = isIdentityFilter(filter) ? [] : getFilterMatrix(filter);
 
   if (!source.uri) return <View style={styles.container} />;
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      onLayout={(e) => setPreviewSize(e.nativeEvent.layout.width, e.nativeEvent.layout.height)}
+    >
       <EditorVideoView
         style={StyleSheet.absoluteFill}
         source={source}
@@ -36,6 +41,7 @@ export function PreviewSurface() {
         }}
         onProgress={(e) => setPlayhead(e.nativeEvent.positionMs / 1000)}
       />
+      <OverlayLayer />
     </View>
   );
 }

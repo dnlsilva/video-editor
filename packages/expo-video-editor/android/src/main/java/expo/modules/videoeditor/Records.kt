@@ -12,6 +12,15 @@ class SeekRecord : Record {
   @Field val positionMs: Int = 0
 }
 
+class OverlayRecord : Record {
+  @Field val uri: String = ""
+  @Field val centerX: Double = 0.5
+  @Field val centerY: Double = 0.5
+  @Field val widthFraction: Double = 0.0
+  @Field val heightFraction: Double = 0.0
+  @Field val rotationDeg: Double = 0.0
+}
+
 class ExportPayload : Record {
   @Field val sourceUri: String = ""
   @Field val startMs: Int = 0
@@ -21,4 +30,6 @@ class ExportPayload : Record {
   @Field val bitrate: Int = 0
   // 4×5 color matrix (20 numbers); empty = no filter → passthrough
   @Field val colorMatrix: List<Double> = emptyList()
+  // rasterized overlays burned in at export
+  @Field val overlays: List<OverlayRecord> = emptyList()
 }
