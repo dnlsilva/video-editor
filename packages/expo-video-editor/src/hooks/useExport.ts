@@ -33,7 +33,6 @@ export function useExport(options: ExportOptions = {}, callbacks: ExportCallback
     } finally {
       setExporting(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [options, callbacks, getEditorState, setExporting, setExportProgress]);
 
   const cancel = useCallback(() => cancelExport(), []);

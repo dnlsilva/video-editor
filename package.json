@@ -9,6 +9,8 @@
   "scripts": {
     "build": "npm run build --workspace expo-video-editor",
     "example": "npm run start --workspace example",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   }
 }

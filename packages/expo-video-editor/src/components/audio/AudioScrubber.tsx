@@ -11,7 +11,6 @@ const HANDLE_W = 20;
 const TRACK_H = 56;
 const MIN_GAP_S = 0.5;
 
-/** Full-audio ruler with a draggable start/end window and solo pre-listen of the selection. */
 export function AudioScrubber() {
   const audio = useEditorStore((s) => s.audio);
   const updateAudio = useEditorStore((s) => s.updateAudio);
@@ -24,7 +23,6 @@ export function AudioScrubber() {
 
   const duration = audio?.duration && audio.duration > 0 ? audio.duration : status.duration || 0;
 
-  // backfill the total duration once the player reports it
   useEffect(() => {
     if (audio && (!audio.duration || audio.duration <= 0) && status.duration > 0) {
       updateAudio({
@@ -53,7 +51,8 @@ export function AudioScrubber() {
     draggingRef.current = v;
   };
   const commit = () => {
-    if (pxPerSec > 0) updateAudio({ trimStart: startX.value / pxPerSec, trimEnd: endX.value / pxPerSec });
+    if (pxPerSec > 0)
+      updateAudio({ trimStart: startX.value / pxPerSec, trimEnd: endX.value / pxPerSec });
   };
   const seekSolo = (px: number) => {
     if (pxPerSec > 0) {
@@ -94,7 +93,6 @@ export function AudioScrubber() {
       runOnJS(setDragging)(false);
     });
 
-  // loop the selection while pre-listening
   useEffect(() => {
     if (!playing || !audio) return;
     const id = setInterval(() => {
@@ -113,7 +111,7 @@ export function AudioScrubber() {
         player.pause();
       } catch {}
     },
-    [player],
+    [player]
   );
 
   const togglePlay = () => {
@@ -129,7 +127,10 @@ export function AudioScrubber() {
     } catch {}
   };
 
-  const selStyle = useAnimatedStyle(() => ({ left: startX.value, width: Math.max(0, endX.value - startX.value) }));
+  const selStyle = useAnimatedStyle(() => ({
+    left: startX.value,
+    width: Math.max(0, endX.value - startX.value),
+  }));
   const leftHandle = useAnimatedStyle(() => ({ left: startX.value - HANDLE_W }));
   const rightHandle = useAnimatedStyle(() => ({ left: endX.value }));
 
@@ -138,9 +139,15 @@ export function AudioScrubber() {
       <Pressable onPress={togglePlay} style={[styles.playBtn, { backgroundColor: theme.accent }]}>
         <Text style={styles.playIcon}>{playing ? '❚❚' : '▶'}</Text>
       </Pressable>
-      <View style={[styles.track, { backgroundColor: theme.surface }]} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
+      <View
+        style={[styles.track, { backgroundColor: theme.surface }]}
+        onLayout={(e) => setW(e.nativeEvent.layout.width)}>
         <Animated.View
-          style={[styles.selection, { borderColor: theme.accent, backgroundColor: 'rgba(124,92,255,0.18)' }, selStyle]}
+          style={[
+            styles.selection,
+            { borderColor: theme.accent, backgroundColor: 'rgba(124,92,255,0.18)' },
+            selStyle,
+          ]}
           pointerEvents="none"
         />
         <GestureDetector gesture={startPan}>
@@ -156,7 +163,13 @@ export function AudioScrubber() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  playBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  playBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   playIcon: { color: '#fff', fontSize: 16 },
   track: { flex: 1, height: TRACK_H, borderRadius: 8, justifyContent: 'center' },
   selection: { position: 'absolute', top: 0, bottom: 0, borderWidth: 2, borderRadius: 8 },

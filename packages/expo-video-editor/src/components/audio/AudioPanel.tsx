@@ -1,9 +1,9 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { useEditorStore } from '../../state/store';
-import { useTheme } from '../../theme';
 import { AudioScrubber } from './AudioScrubber';
 import { Slider } from './Slider';
+import { useEditorStore } from '../../state/store';
+import { useTheme } from '../../theme';
 
 export function AudioPanel() {
   const activePanel = useEditorStore((s) => s.activePanel);
@@ -50,8 +50,19 @@ export function AudioPanel() {
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
-  sheet: { padding: 20, paddingBottom: 40, borderTopLeftRadius: 20, borderTopRightRadius: 20, gap: 10 },
-  topbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  sheet: {
+    padding: 20,
+    paddingBottom: 40,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    gap: 10,
+  },
+  topbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
   title: { fontSize: 15, fontWeight: '600', flex: 1, textAlign: 'center', marginHorizontal: 12 },
   action: { fontSize: 15, fontWeight: '700' },
   label: { fontSize: 12, marginTop: 8 },

@@ -20,7 +20,6 @@ export function TextOverlayView({ overlay }: { overlay: TextOverlay }) {
     <GestureDetector gesture={gesture}>
       <Animated.View style={[styles.wrapper, animatedStyle]}>
         <View
-          // registered unscaled/untransformed → what the export rasterizes
           ref={(v) => registerOverlayRef(overlay.id, v)}
           collapsable={false}
           onLayout={(e) => {
@@ -40,16 +39,14 @@ export function TextOverlayView({ overlay }: { overlay: TextOverlay }) {
             styles.content,
             selected && { borderColor: theme.accent },
             overlay.backgroundColor ? { backgroundColor: overlay.backgroundColor } : null,
-          ]}
-        >
+          ]}>
           <Text
             style={{
               color: overlay.color,
               fontSize: overlay.fontSize,
               fontFamily: overlay.fontFamily,
               textAlign: overlay.align,
-            }}
-          >
+            }}>
             {overlay.text || ' '}
           </Text>
         </View>

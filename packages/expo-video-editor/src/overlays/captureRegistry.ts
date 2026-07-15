@@ -1,10 +1,5 @@
 import type { View } from 'react-native';
 
-/**
- * Maps overlay id → its (unscaled, untransformed) content view, so the export service
- * can rasterize each overlay with react-native-view-shot without threading refs through
- * the component tree. Views register on mount and clear on unmount.
- */
 const refs = new Map<string, View>();
 
 export function registerOverlayRef(id: string, view: View | null): void {

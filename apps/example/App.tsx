@@ -1,11 +1,10 @@
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
+import { VideoEditor, type ExportResult } from 'expo-video-editor';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { VideoEditor, type ExportResult } from 'expo-video-editor';
 
-// Put your GIPHY API key here to enable the GIF button (https://developers.giphy.com).
 const GIPHY_API_KEY = '';
 
 export default function App() {
@@ -24,7 +23,10 @@ export default function App() {
   };
 
   const onPickAudio = async () => {
-    const res = await DocumentPicker.getDocumentAsync({ type: 'audio/*', copyToCacheDirectory: true });
+    const res = await DocumentPicker.getDocumentAsync({
+      type: 'audio/*',
+      copyToCacheDirectory: true,
+    });
     if (res.canceled || !res.assets[0]) return null;
     return { uri: res.assets[0].uri, title: res.assets[0].name };
   };
@@ -76,6 +78,11 @@ const styles = StyleSheet.create({
   },
   title: { color: '#fff', fontSize: 22, fontWeight: '700' },
   mono: { color: '#8ef', fontSize: 12, textAlign: 'center' },
-  btn: { backgroundColor: '#7c5cff', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 26 },
+  btn: {
+    backgroundColor: '#7c5cff',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 26,
+  },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

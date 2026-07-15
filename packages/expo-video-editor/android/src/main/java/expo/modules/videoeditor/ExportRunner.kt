@@ -33,11 +33,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 
-/**
- * Single-pass native export via Media3 Transformer.
- * Phase 1: trim only → no effects → Transformer transmuxes (passthrough), near-instant.
- * Later phases add a color-matrix effect, overlays, and an audio-mix sequence.
- */
 @UnstableApi
 class ExportRunner(
   private val context: Context,
@@ -60,7 +55,6 @@ class ExportRunner(
   }
 
   fun export(payload: ExportPayload, promise: Promise) {
-    // Transformer must be created/started on a Looper thread.
     mainHandler.post {
       try {
         val outFile = File(context.cacheDir, "vieditor-export-${System.nanoTime()}.mp4")
@@ -79,7 +73,6 @@ class ExportRunner(
           .setClippingConfiguration(clipping)
           .build()
 
-        // Any video effect forces a re-encode; none → passthrough transmux.
         val videoEffects = mutableListOf<Effect>()
         if (payload.colorMatrix.size >= 20) {
           videoEffects.add(ColorMatrixEffect(FloatArray(20) { payload.colorMatrix[it].toFloat() }))
@@ -123,8 +116,6 @@ class ExportRunner(
 
         transformer = t
         if (audio != null) {
-          // Newest Media3 area (mixing audio across sequences). Documented fallback if a
-          // device chokes: decode+mix PCM manually (see PLAN.md §8).
           val clipping = if (audio.trimEndMs > audio.trimStartMs) {
             MediaItem.ClippingConfiguration.Builder()
               .setStartPositionMs(audio.trimStartMs.toLong())
@@ -173,7 +164,6 @@ class ExportRunner(
   }
 
   private fun volumeProcessor(volume: Float): AudioProcessor {
-    // Scale the identity channel-mixing matrix by the gain, covering mono + stereo inputs.
     val processor = ChannelMixingAudioProcessor()
     processor.putChannelMixingMatrix(ChannelMixingMatrix.create(1, 1).scaleBy(volume))
     processor.putChannelMixingMatrix(ChannelMixingMatrix.create(2, 2).scaleBy(volume))
@@ -214,7 +204,7 @@ class ExportRunner(
     val h = movie.height()
     if (w <= 0 || h <= 0) return null
     val duration = movie.duration().coerceAtLeast(1)
-    val stepMs = 50 // sample ~20fps; Movie exposes only total duration, not per-frame delays
+    val stepMs = 50
     val frames = mutableListOf<Bitmap>()
     var t = 0
     while (t < duration) {
@@ -231,7 +221,6 @@ class ExportRunner(
   private fun overlaySettings(rec: OverlayRecord, bmpW: Int, bmpH: Int, outW: Int, outH: Int): StaticOverlaySettings {
     val sx = (rec.widthFraction * outW / bmpW).toFloat()
     val sy = (rec.heightFraction * outH / bmpH).toFloat()
-    // Media3 anchors are -1..1 (0 = center); background y is +up while our centerY is +down.
     val bgX = (rec.centerX * 2 - 1).toFloat()
     val bgY = (1 - rec.centerY * 2).toFloat()
     return StaticOverlaySettings.Builder()
@@ -266,7 +255,6 @@ class ExportRunner(
         if (it > 0) durationMs = it
       }
     } catch (_: Exception) {
-      // fall back to payload-derived duration and zero dims
     } finally {
       retriever.release()
     }

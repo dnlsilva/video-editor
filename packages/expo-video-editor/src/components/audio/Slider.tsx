@@ -7,7 +7,6 @@ import { useTheme } from '../../theme';
 
 const THUMB = 18;
 
-/** Minimal 0..1 slider (avoids a slider dependency). */
 export function Slider({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const theme = useTheme();
   const [w, setW] = useState(0);
@@ -48,7 +47,14 @@ export function Slider({ value, onChange }: { value: number; onChange: (v: numbe
 
 const styles = StyleSheet.create({
   track: { height: THUMB + 12, justifyContent: 'center' },
-  bg: { position: 'absolute', left: 0, right: 0, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.2)' },
+  bg: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
   fill: { position: 'absolute', left: 0, height: 4, borderRadius: 2 },
   thumb: { width: THUMB, height: THUMB, borderRadius: THUMB / 2 },
 });

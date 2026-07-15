@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-const { spawnSyncWithAutoShell } = require('./util');
 const fs = require('fs');
 const path = require('path');
+
+const { spawnSyncWithAutoShell } = require('./util');
 
 const SUBTARGETS = ['plugin', 'cli', 'utils', 'scripts'];
 const args = process.argv.slice(2);

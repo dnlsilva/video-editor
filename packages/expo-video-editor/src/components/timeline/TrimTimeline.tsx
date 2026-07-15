@@ -3,19 +3,14 @@ import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
+import { ThumbnailStrip } from './ThumbnailStrip';
 import { useEditorStore } from '../../state/store';
 import { useTheme } from '../../theme';
-import { ThumbnailStrip } from './ThumbnailStrip';
 
 const HANDLE_W = 22;
 const TRACK_H = 60;
 const MIN_GAP_S = 0.5;
 
-/**
- * Trim bar: thumbnail strip + two draggable handles + playhead.
- * Handle positions live in Reanimated shared values (UI thread) during a drag and
- * commit to the store on release, so a drag never re-renders React (perf rule #3).
- */
 export function TrimTimeline() {
   const uri = useEditorStore((s) => s.source.uri);
   const duration = useEditorStore((s) => s.meta?.duration ?? 0);
@@ -35,7 +30,6 @@ export function TrimTimeline() {
   const pxPerSec = duration > 0 && w > 0 ? w / duration : 0;
   const minGapPx = MIN_GAP_S * pxPerSec;
 
-  // Sync handles from the store while not dragging (e.g. initial full-clip window).
   useEffect(() => {
     if (draggingRef.current || pxPerSec === 0) return;
     startX.value = trimStart * pxPerSec;
@@ -48,7 +42,6 @@ export function TrimTimeline() {
   const commit = () => {
     if (pxPerSec > 0) setTrim(startX.value / pxPerSec, endX.value / pxPerSec);
   };
-  // ponytail: live scrub-seek on every frame; if native seek proves heavy, throttle here.
   const seekToPx = (px: number) => {
     if (pxPerSec > 0) requestSeek(px / pxPerSec);
   };
@@ -92,16 +85,24 @@ export function TrimTimeline() {
   const leftHandleStyle = useAnimatedStyle(() => ({ left: startX.value - HANDLE_W }));
   const rightHandleStyle = useAnimatedStyle(() => ({ left: endX.value }));
   const leftDimStyle = useAnimatedStyle(() => ({ left: 0, width: startX.value }));
-  const rightDimStyle = useAnimatedStyle(() => ({ left: endX.value, width: Math.max(0, w - endX.value) }));
+  const rightDimStyle = useAnimatedStyle(() => ({
+    left: endX.value,
+    width: Math.max(0, w - endX.value),
+  }));
 
   return (
-    <View style={[styles.track, { height: TRACK_H }]} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
+    <View
+      style={[styles.track, { height: TRACK_H }]}
+      onLayout={(e) => setW(e.nativeEvent.layout.width)}>
       <ThumbnailStrip uri={uri} duration={duration} />
 
       <Animated.View style={[styles.dim, leftDimStyle]} pointerEvents="none" />
       <Animated.View style={[styles.dim, rightDimStyle]} pointerEvents="none" />
 
-      <Animated.View style={[styles.selection, { borderColor: theme.accent }, selStyle]} pointerEvents="none" />
+      <Animated.View
+        style={[styles.selection, { borderColor: theme.accent }, selStyle]}
+        pointerEvents="none"
+      />
 
       <Playhead duration={duration} width={w} />
 
@@ -119,7 +120,6 @@ export function TrimTimeline() {
   );
 }
 
-/** Isolated so playhead re-renders never touch the gesture-holding parent. */
 function Playhead({ duration, width }: { duration: number; width: number }) {
   const playhead = useEditorStore((s) => s.playhead);
   if (duration <= 0 || width <= 0) return null;
@@ -129,7 +129,13 @@ function Playhead({ duration, width }: { duration: number; width: number }) {
 
 const styles = StyleSheet.create({
   track: { width: '100%', justifyContent: 'center' },
-  dim: { position: 'absolute', top: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 8 },
+  dim: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderRadius: 8,
+  },
   selection: { position: 'absolute', top: 0, bottom: 0, borderWidth: 2, borderRadius: 8 },
   handle: {
     position: 'absolute',

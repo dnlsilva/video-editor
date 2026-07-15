@@ -5,12 +5,12 @@ import { useExport, type ExportCallbacks } from '../hooks/useExport';
 import { type ActivePanel, useEditorStore } from '../state/store';
 import { type EditorTheme, useTheme } from '../theme';
 import type { ExportOptions } from '../types';
-import { AudioPanel } from './audio/AudioPanel';
 import { ExportOverlay } from './ExportOverlay';
+import { PreviewSurface } from './PreviewSurface';
+import { AudioPanel } from './audio/AudioPanel';
 import { FilterCarousel } from './filters/FilterCarousel';
 import { GiphyPicker } from './giphy/GiphyPicker';
 import { TextEditorSheet } from './overlays/TextEditorSheet';
-import { PreviewSurface } from './PreviewSurface';
 import { TrimTimeline } from './timeline/TrimTimeline';
 
 type Props = {
@@ -62,16 +62,38 @@ export function EditorRoot({ exportOptions, callbacks, onCancel }: Props) {
 
         <View style={styles.toolbar}>
           <View style={styles.tools}>
-            <ToolButton label="Filters" active={activePanel === 'filter'} onPress={() => toggle('filter')} theme={theme} />
-            <ToolButton label="Text" active={false} onPress={() => addTextOverlay()} theme={theme} />
+            <ToolButton
+              label="Filters"
+              active={activePanel === 'filter'}
+              onPress={() => toggle('filter')}
+              theme={theme}
+            />
+            <ToolButton
+              label="Text"
+              active={false}
+              onPress={() => addTextOverlay()}
+              theme={theme}
+            />
             {giphyApiKey ? (
-              <ToolButton label="GIF" active={activePanel === 'giphy'} onPress={() => setActivePanel('giphy')} theme={theme} />
+              <ToolButton
+                label="GIF"
+                active={activePanel === 'giphy'}
+                onPress={() => setActivePanel('giphy')}
+                theme={theme}
+              />
             ) : null}
             {audioPicker || audio ? (
-              <ToolButton label="Music" active={activePanel === 'audio'} onPress={onMusic} theme={theme} />
+              <ToolButton
+                label="Music"
+                active={activePanel === 'audio'}
+                onPress={onMusic}
+                theme={theme}
+              />
             ) : null}
           </View>
-          <Pressable style={[styles.exportBtn, { backgroundColor: theme.accent }]} onPress={() => run()}>
+          <Pressable
+            style={[styles.exportBtn, { backgroundColor: theme.accent }]}
+            onPress={() => run()}>
             <Text style={styles.exportText}>Export</Text>
           </Pressable>
         </View>
@@ -105,8 +127,7 @@ function ToolButton({
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.toolBtn, { backgroundColor: active ? theme.accent : theme.surface }]}
-    >
+      style={[styles.toolBtn, { backgroundColor: active ? theme.accent : theme.surface }]}>
       <Text style={[styles.toolText, { color: active ? '#fff' : theme.textMuted }]}>{label}</Text>
     </Pressable>
   );

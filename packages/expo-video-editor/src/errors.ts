@@ -1,12 +1,6 @@
 export type EditorErrorCode =
-  | 'EXPORT_FAILED'
-  | 'CANCELLED'
-  | 'SOURCE_LOAD'
-  | 'AUDIO_LOAD'
-  | 'GIPHY_NETWORK'
-  | 'UNSUPPORTED';
+  'EXPORT_FAILED' | 'CANCELLED' | 'SOURCE_LOAD' | 'AUDIO_LOAD' | 'GIPHY_NETWORK' | 'UNSUPPORTED';
 
-/** Typed error surfaced by the editor. Native promises reject with these codes. */
 export class EditorError extends Error {
   readonly code: EditorErrorCode;
   readonly cause?: unknown;
@@ -19,10 +13,11 @@ export class EditorError extends Error {
   }
 }
 
-/** Normalize anything thrown across the native bridge into an EditorError. */
-export function toEditorError(e: unknown, fallback: EditorErrorCode = 'EXPORT_FAILED'): EditorError {
+export function toEditorError(
+  e: unknown,
+  fallback: EditorErrorCode = 'EXPORT_FAILED'
+): EditorError {
   if (e instanceof EditorError) return e;
-  // Expo native rejections arrive as { code, message }.
   const code = (e as { code?: string })?.code;
   const message = (e as { message?: string })?.message ?? String(e);
   const known: EditorErrorCode[] = [

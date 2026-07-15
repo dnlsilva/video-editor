@@ -14,7 +14,6 @@ import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.viewevent.EventDispatcher
 import expo.modules.kotlin.views.ExpoView
 
-/** Prop-driven ExoPlayer preview. Loops within [loopStart, loopEnd] and reports progress/metadata. */
 @UnstableApi
 class ExpoVideoEditorView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
   private val onLoad by EventDispatcher<Map<String, Any>>()

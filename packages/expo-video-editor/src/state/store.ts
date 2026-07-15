@@ -18,7 +18,6 @@ const nextOverlayId = () => `ov_${Date.now().toString(36)}_${overlayCounter++}`;
 export type ActivePanel = 'none' | 'trim' | 'filter' | 'text' | 'giphy' | 'audio';
 
 export type EditorStore = {
-  // ── serializable edit (mirrors EditorState) ───────────────────────────────
   source: VideoSource;
   meta: VideoMeta | null;
   trim: { start: number; end: number };
@@ -27,25 +26,18 @@ export type EditorStore = {
   audio: AudioTrack | null;
   originalVolume: number;
 
-  // ── ephemeral UI (never exported) ─────────────────────────────────────────
-  playhead: number; // seconds
+  playhead: number;
   paused: boolean;
   activePanel: ActivePanel;
   exporting: boolean;
-  exportProgress: number; // 0..1
-  /** seconds; where a consumer asked the player to jump to */
+  exportProgress: number;
   seekTarget: number;
-  /** bumped on every seek request so the player re-seeks even to the same target */
   seekNonce: number;
-  /** measured preview surface size in px (for overlay placement + export rasterization) */
   previewSize: { width: number; height: number };
   selectedOverlayId: string | null;
-  /** host-provided Giphy API key (config, survives init) */
   giphyApiKey: string | null;
-  /** host-provided audio source resolver (config, survives init) */
   audioPicker: (() => Promise<AudioSource | null>) | null;
 
-  // ── actions ───────────────────────────────────────────────────────────────
   init: (source: VideoSource) => void;
   setMeta: (meta: VideoMeta) => void;
   setTrim: (start: number, end: number) => void;
@@ -114,15 +106,13 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   setMeta: (meta) =>
     set((s) => ({
       meta,
-      // default the trim window to the whole clip on first load
       trim: s.trim.end > 0 ? s.trim : { start: 0, end: meta.duration },
     })),
 
   setTrim: (start, end) => set({ trim: { start, end } }),
   setFilter: (key) => set({ filter: key }),
   setPlayhead: (t) => set({ playhead: t }),
-  requestSeek: (t) =>
-    set((s) => ({ seekTarget: t, seekNonce: s.seekNonce + 1, playhead: t })),
+  requestSeek: (t) => set((s) => ({ seekTarget: t, seekNonce: s.seekNonce + 1, playhead: t })),
   setPaused: (paused) => set({ paused }),
   togglePlay: () => set((s) => ({ paused: !s.paused })),
   setActivePanel: (activePanel) => set({ activePanel }),
@@ -141,7 +131,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       align: 'center',
       transform: { ...IDENTITY_TRANSFORM },
     };
-    set((s) => ({ overlays: [...s.overlays, overlay], selectedOverlayId: id, activePanel: 'text' }));
+    set((s) => ({
+      overlays: [...s.overlays, overlay],
+      selectedOverlayId: id,
+      activePanel: 'text',
+    }));
     return id;
   },
   addGifOverlay: (item) => {
@@ -154,7 +148,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       aspectRatio: item.aspectRatio > 0 ? item.aspectRatio : 1,
       transform: { ...IDENTITY_TRANSFORM },
     };
-    set((s) => ({ overlays: [...s.overlays, overlay], selectedOverlayId: id, activePanel: 'none' }));
+    set((s) => ({
+      overlays: [...s.overlays, overlay],
+      selectedOverlayId: id,
+      activePanel: 'none',
+    }));
     return id;
   },
   updateOverlay: (id, patch) =>

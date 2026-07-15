@@ -6,9 +6,7 @@ export type GiphyKind = 'gifs' | 'stickers';
 
 export type GiphyItem = {
   id: string;
-  /** small animated rendition for the grid + editor preview */
   previewUrl: string;
-  /** original animated file, downloaded only at export */
   originalUrl: string;
   width: number;
   height: number;
@@ -44,7 +42,7 @@ async function fetchGifs(path: string, params: Record<string, string>): Promise<
 
 export function trendingGifs(
   apiKey: string,
-  opts: { offset?: number; limit?: number; kind?: GiphyKind } = {},
+  opts: { offset?: number; limit?: number; kind?: GiphyKind } = {}
 ): Promise<GiphyItem[]> {
   const { offset = 0, limit = 24, kind = 'gifs' } = opts;
   return fetchGifs(`/${kind}/trending`, {
@@ -58,7 +56,7 @@ export function trendingGifs(
 export function searchGifs(
   apiKey: string,
   query: string,
-  opts: { offset?: number; limit?: number; kind?: GiphyKind } = {},
+  opts: { offset?: number; limit?: number; kind?: GiphyKind } = {}
 ): Promise<GiphyItem[]> {
   const { offset = 0, limit = 24, kind = 'gifs' } = opts;
   return fetchGifs(`/${kind}/search`, {

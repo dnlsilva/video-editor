@@ -1,6 +1,3 @@
-// Metro config for the monorepo: watch the workspace root so Metro sees the
-// linked `expo-video-editor` package, and resolve modules from both the app's
-// and the root's node_modules (npm workspaces hoists most deps to the root).
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 

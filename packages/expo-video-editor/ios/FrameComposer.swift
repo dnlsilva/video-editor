@@ -2,16 +2,9 @@ import AVFoundation
 import CoreImage
 import ImageIO
 
-/**
- * One video composition that applies the color matrix and then composites overlays, so a
- * single re-encode covers filter + text + GIF. Animated overlays are decoded to frames and
- * the frame matching the current composition time (looping) is drawn. Overlays are placed by
- * fraction of the frame (CI origin is bottom-left → centerY flipped), rotated clockwise.
- */
 enum FrameComposer {
   private struct LoadedOverlay {
     let frames: [CIImage]
-    /** cumulative end time of each frame, seconds */
     let cumulative: [Double]
     let total: Double
     let rec: OverlayRecord
@@ -54,12 +47,12 @@ enum FrameComposer {
     let sx = (rec.widthFraction * frame.width) / oe.width
     let sy = (rec.heightFraction * frame.height) / oe.height
     let cx = frame.minX + rec.centerX * frame.width
-    let cy = frame.minY + (1 - rec.centerY) * frame.height // CI origin is bottom-left
+    let cy = frame.minY + (1 - rec.centerY) * frame.height
 
     let transform = CGAffineTransform(translationX: cx, y: cy)
-      .rotated(by: -rec.rotationDeg * .pi / 180) // screen is clockwise-positive; CI is ccw
+      .rotated(by: -rec.rotationDeg * .pi / 180)
       .scaledBy(x: sx, y: sy)
-      .translatedBy(x: -oe.midX, y: -oe.midY) // pivot on the overlay's own center
+      .translatedBy(x: -oe.midX, y: -oe.midY)
 
     return overlay.transformed(by: transform).composited(over: base)
   }

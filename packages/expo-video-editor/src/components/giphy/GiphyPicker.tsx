@@ -1,10 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
+import { GiphyGrid } from './GiphyGrid';
 import { searchGifs, trendingGifs, type GiphyItem } from '../../services/giphyClient';
 import { useEditorStore } from '../../state/store';
 import { useTheme } from '../../theme';
-import { GiphyGrid } from './GiphyGrid';
 
 const PAGE = 24;
 
@@ -39,10 +47,9 @@ export function GiphyPicker() {
         setLoading(false);
       }
     },
-    [apiKey],
+    [apiKey]
   );
 
-  // (re)load on open and on debounced query change
   useEffect(() => {
     if (!visible) return;
     const t = setTimeout(() => load(true, query.trim()), query ? 350 : 0);
@@ -91,7 +98,13 @@ export function GiphyPicker() {
 
 const styles = StyleSheet.create({
   sheet: { flex: 1, paddingTop: 56 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 10 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+  },
   input: { flex: 1, height: 40, borderRadius: 20, paddingHorizontal: 16, fontSize: 15 },
   close: { fontSize: 15, fontWeight: '700' },
   loader: { position: 'absolute', top: '50%', alignSelf: 'center' },

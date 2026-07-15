@@ -4,7 +4,6 @@ import { FILTER_PRESETS } from '../../filters/presets';
 import { useEditorStore } from '../../state/store';
 import { useTheme } from '../../theme';
 
-/** Filter chips; tapping one applies it live to the preview (same matrix used at export). */
 export function FilterCarousel() {
   const filter = useEditorStore((s) => s.filter);
   const setFilter = useEditorStore((s) => s.setFilter);
@@ -14,8 +13,7 @@ export function FilterCarousel() {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.row}
-    >
+      contentContainerStyle={styles.row}>
       {FILTER_PRESETS.map((p) => {
         const active = p.key === filter;
         return (
@@ -24,9 +22,11 @@ export function FilterCarousel() {
             onPress={() => setFilter(p.key)}
             style={[
               styles.chip,
-              { backgroundColor: theme.surface, borderColor: active ? theme.accent : 'transparent' },
-            ]}
-          >
+              {
+                backgroundColor: theme.surface,
+                borderColor: active ? theme.accent : 'transparent',
+              },
+            ]}>
             <Text style={[styles.label, { color: active ? theme.accent : theme.textMuted }]}>
               {p.label}
             </Text>

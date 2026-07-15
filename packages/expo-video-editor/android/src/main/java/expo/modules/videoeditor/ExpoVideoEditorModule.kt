@@ -14,7 +14,6 @@ class ExpoVideoEditorModule : Module() {
 
     Events("onExportProgress")
 
-    // Phase 0 liveness probe.
     AsyncFunction("ping") {
       "ExpoVideoEditor 0.1.0 (android)"
     }

@@ -5,10 +5,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.BitmapOverlay
 import androidx.media3.effect.OverlaySettings
 
-/**
- * Animated overlay: returns the GIF frame matching the video timestamp (looping over the
- * clip). Frames are pre-decoded; settings (scale/anchor/rotation) are fixed for all frames.
- */
 @UnstableApi
 class GifOverlay(
   private val frames: List<Bitmap>,

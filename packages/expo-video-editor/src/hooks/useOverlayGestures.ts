@@ -5,11 +5,6 @@ import { runOnJS, useAnimatedStyle, useSharedValue } from 'react-native-reanimat
 import { useEditorStore } from '../state/store';
 import type { Overlay } from '../types';
 
-/**
- * Composed drag + pinch + rotate for one overlay. Position/scale/rotation live in
- * Reanimated shared values (UI thread) during the gesture and commit to the store on
- * release (normalized to the video frame), so a drag never re-renders React.
- */
 export function useOverlayGestures(overlay: Overlay) {
   const previewW = useEditorStore((s) => s.previewSize.width);
   const previewH = useEditorStore((s) => s.previewSize.height);
@@ -29,7 +24,6 @@ export function useOverlayGestures(overlay: Overlay) {
   const startScale = useSharedValue(1);
   const startRot = useSharedValue(0);
 
-  // Re-seed from the store when the overlay changes outside a gesture (e.g. edit sheet).
   useEffect(() => {
     cx.value = overlay.transform.x * previewW;
     cy.value = overlay.transform.y * previewH;

@@ -1,10 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 
-import { useEditorStore } from '../../state/store';
 import { GifOverlayView } from './GifOverlayView';
 import { TextOverlayView } from './TextOverlayView';
+import { useEditorStore } from '../../state/store';
 
-/** Interactive overlays layered over the preview. Burned into pixels only at export. */
 export function OverlayLayer() {
   const overlays = useEditorStore((s) => s.overlays);
 
@@ -15,7 +14,7 @@ export function OverlayLayer() {
           <TextOverlayView key={o.id} overlay={o} />
         ) : (
           <GifOverlayView key={o.id} overlay={o} />
-        ),
+        )
       )}
     </View>
   );

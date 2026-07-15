@@ -4,7 +4,6 @@ import { Image, StyleSheet, View } from 'react-native';
 
 type Props = { uri: string; duration: number; count?: number };
 
-/** Evenly-spaced frames across the clip. Generated lazily off the mount path (perf rule #8). */
 export function ThumbnailStrip({ uri, duration, count = 12 }: Props) {
   const [thumbs, setThumbs] = useState<string[]>([]);
 
@@ -25,7 +24,7 @@ export function ThumbnailStrip({ uri, duration, count = 12 }: Props) {
           });
           if (cancelled) return;
           out.push(thumb);
-          setThumbs([...out]); // progressive fill
+          setThumbs([...out]);
         } catch {
           if (cancelled) return;
           out.push('');

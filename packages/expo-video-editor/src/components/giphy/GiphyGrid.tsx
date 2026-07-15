@@ -37,6 +37,12 @@ export function GiphyGrid({
 const styles = StyleSheet.create({
   content: { padding: GAP, gap: GAP },
   row: { gap: GAP },
-  cell: { flex: 1 / COLUMNS, aspectRatio: 1, borderRadius: 8, overflow: 'hidden', backgroundColor: '#222' },
+  cell: {
+    flex: 1 / COLUMNS,
+    aspectRatio: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#222',
+  },
   img: { width: '100%', height: '100%' },
 });

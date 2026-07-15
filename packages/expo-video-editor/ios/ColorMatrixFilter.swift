@@ -1,10 +1,6 @@
 import AVFoundation
 import CoreImage
 
-/**
- * Builds a CIColorMatrix from the shared 4×5 preset (row-major [r,g,b,a,bias] per output
- * channel) and wraps it in a video composition. Same numbers the Android GL shader consumes.
- */
 enum ColorMatrixFilter {
   static func makeFilter(_ m: [Double]) -> CIFilter? {
     guard m.count >= 20, let filter = CIFilter(name: "CIColorMatrix") else { return nil }

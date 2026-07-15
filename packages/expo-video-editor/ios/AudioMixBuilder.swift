@@ -1,10 +1,5 @@
 import AVFoundation
 
-/**
- * Builds a trimmed composition (video + original audio + looped music) and the audio mix that
- * balances the two tracks. Trim is baked into the composition, so the export session needs no
- * timeRange. The video track keeps its preferredTransform so rotation survives.
- */
 enum AudioMixBuilder {
   static func build(source: AVURLAsset, payload: ExportPayload) async throws -> (AVMutableComposition, AVMutableAudioMix) {
     let composition = AVMutableComposition()

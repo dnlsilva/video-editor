@@ -1,12 +1,6 @@
 import AVFoundation
 import Foundation
 
-/**
- * Single-pass native export via AVFoundation.
- * - trim only → passthrough preset (no re-encode)
- * - filter/overlays → re-encode + FrameComposer video composition
- * - music → trimmed AVMutableComposition + AVAudioMix (trim baked into the composition)
- */
 class ExportRunner {
   private var session: AVAssetExportSession?
   private var progressTimer: Timer?

@@ -2,7 +2,6 @@ import AVFoundation
 import ExpoModulesCore
 import UIKit
 
-/** Prop-driven AVPlayer preview. Loops within [loopStart, loopEnd] and reports progress/metadata. */
 class ExpoVideoEditorView: ExpoView {
   private let onLoad = EventDispatcher()
   private let onProgress = EventDispatcher()
@@ -27,7 +26,7 @@ class ExpoVideoEditorView: ExpoView {
     playerLayer.videoGravity = .resizeAspect
     layer.addSublayer(playerLayer)
 
-    let interval = CMTime(value: 1, timescale: 20) // ~50ms
+    let interval = CMTime(value: 1, timescale: 20)
     timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
       self?.onTick(time)
     }
@@ -54,7 +53,7 @@ class ExpoVideoEditorView: ExpoView {
       guard let self = self, observed.status == .readyToPlay, !self.didEmitLoad else { return }
       self.didEmitLoad = true
       self.emitLoad(item)
-      self.applyVideoComposition() // reapply once tracks are loaded
+      self.applyVideoComposition()
     }
     player.replaceCurrentItem(with: item)
     applyVideoComposition()

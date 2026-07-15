@@ -5,7 +5,6 @@ import EditorVideoView from '../native/EditorVideoView';
 import { useEditorStore } from '../state/store';
 import { OverlayLayer } from './overlays/OverlayLayer';
 
-/** Hosts the native player and binds it to the store. Overlays (text/GIF) mount on top in later phases. */
 export function PreviewSurface() {
   const source = useEditorStore((s) => s.source);
   const paused = useEditorStore((s) => s.paused);
@@ -25,8 +24,7 @@ export function PreviewSurface() {
   return (
     <View
       style={styles.container}
-      onLayout={(e) => setPreviewSize(e.nativeEvent.layout.width, e.nativeEvent.layout.height)}
-    >
+      onLayout={(e) => setPreviewSize(e.nativeEvent.layout.width, e.nativeEvent.layout.height)}>
       <EditorVideoView
         style={StyleSheet.absoluteFill}
         source={source}

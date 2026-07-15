@@ -35,8 +35,7 @@ export function GifOverlayView({ overlay }: { overlay: StickerOverlay }) {
             }
           }}
           onTouchEnd={() => selectOverlay(overlay.id)}
-          style={[styles.content, selected && { borderColor: theme.accent }]}
-        >
+          style={[styles.content, selected && { borderColor: theme.accent }]}>
           <Image
             source={{ uri: overlay.previewUri }}
             style={{ width, height }}

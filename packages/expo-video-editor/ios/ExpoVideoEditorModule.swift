@@ -8,7 +8,6 @@ public class ExpoVideoEditorModule: Module {
 
     Events("onExportProgress")
 
-    // Phase 0 liveness probe.
     AsyncFunction("ping") { () -> String in
       "ExpoVideoEditor 0.1.0 (ios)"
     }
