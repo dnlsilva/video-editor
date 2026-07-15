@@ -1,30 +1,54 @@
+import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import ExpoVideoEditor, { ExpoVideoEditorView } from 'expo-video-editor';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { VideoEditor, type ExportResult } from 'expo-video-editor';
 
 export default function App() {
-  const [pong, setPong] = useState('pinging…');
+  const [videoUri, setVideoUri] = useState<string | null>(null);
+  const [exported, setExported] = useState<ExportResult | null>(null);
 
-  useEffect(() => {
-    ExpoVideoEditor.ping()
-      .then(setPong)
-      .catch((e: unknown) => setPong(`error: ${String(e)}`));
-  }, []);
+  const pick = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['videos'],
+      quality: 1,
+    });
+    if (!res.canceled && res.assets[0]) {
+      setExported(null);
+      setVideoUri(res.assets[0].uri);
+    }
+  };
+
+  if (videoUri) {
+    return (
+      <VideoEditor
+        source={{ uri: videoUri }}
+        onExportComplete={(r) => {
+          setExported(r);
+          setVideoUri(null);
+        }}
+        onExportError={(e) => {
+          console.warn('export error', e);
+          setVideoUri(null);
+        }}
+        onCancel={() => setVideoUri(null)}
+      />
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>expo-video-editor</Text>
-      <Text style={styles.mono}>ping → {pong}</Text>
-      <Text style={styles.mono}>PI → {ExpoVideoEditor.PI.toFixed(5)}</Text>
-
-      <ExpoVideoEditorView
-        style={styles.native}
-        onTap={() => setPong('native view tapped ✓')}
-      />
-      <Text style={styles.hint}>(tap the box above)</Text>
-
-      <StatusBar style="auto" />
+      {exported ? (
+        <Text style={styles.mono}>
+          exported → {exported.width}×{exported.height} · {exported.duration.toFixed(1)}s{'\n'}
+          {exported.uri}
+        </Text>
+      ) : null}
+      <Pressable style={styles.btn} onPress={pick}>
+        <Text style={styles.btnText}>Pick a video</Text>
+      </Pressable>
+      <StatusBar style="light" />
     </View>
   );
 }
@@ -35,17 +59,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#0b0b0f',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: 20,
     padding: 24,
   },
   title: { color: '#fff', fontSize: 22, fontWeight: '700' },
-  mono: { color: '#8ef', fontFamily: 'Courier', fontSize: 15 },
-  native: {
-    width: 160,
-    height: 160,
-    marginTop: 16,
-    borderRadius: 16,
-    backgroundColor: '#1c1c26',
-  },
-  hint: { color: '#666', fontSize: 12 },
+  mono: { color: '#8ef', fontSize: 12, textAlign: 'center' },
+  btn: { backgroundColor: '#7c5cff', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 26 },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

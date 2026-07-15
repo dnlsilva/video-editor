@@ -1,5 +1,6 @@
-// Reexport the native module. On web, it will be resolved to ExpoVideoEditorModule.web.ts
-// and on native platforms to ExpoVideoEditorModule.ts
-export { default } from './ExpoVideoEditorModule';
-export { default as ExpoVideoEditorView } from './ExpoVideoEditorView';
-export * from './ExpoVideoEditor.types';
+export { VideoEditor } from './components/VideoEditor';
+export { useEditorStore as useVideoEditor } from './state/store';
+export { exportVideo, cancelExport } from './services/exportService';
+export { EditorError, type EditorErrorCode } from './errors';
+export { defaultTheme, type EditorTheme } from './theme';
+export * from './types';

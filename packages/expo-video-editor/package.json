@@ -26,7 +26,9 @@
   "author": "Gleidson Daniel <gleidson10daniel@gmail.com> (https://github.com/GleidsonDaniel)",
   "license": "MIT",
   "homepage": "https://github.com/GleidsonDaniel/expo-video-editor#readme",
-  "dependencies": {},
+  "dependencies": {
+    "zustand": "^5.0.2"
+  },
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@types/jest": "^29.2.1",
@@ -51,6 +53,9 @@
   "peerDependencies": {
     "expo": "*",
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-gesture-handler": ">=2.0.0",
+    "react-native-reanimated": ">=3.0.0",
+    "expo-video-thumbnails": "*"
   }
 }
